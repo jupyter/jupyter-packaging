@@ -158,6 +158,8 @@ def wrap_command(cmds, data_dirs, cls, strict=True):
     ----------
     cmds: list(str)
         The names of the other commands to run prior to the command.
+    data_dirs: list(str), optional.
+        The directories containing static data.
     strict: boolean, optional
         Wether to raise errors when a pre-command fails.
     """
