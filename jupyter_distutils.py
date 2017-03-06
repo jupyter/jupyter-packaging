@@ -7,6 +7,7 @@
 import os
 from os.path import join as pjoin
 import functools
+import pipes
 import shutil
 
 from distutils.cmd import Command
@@ -22,6 +23,17 @@ try:
     from wheel.bdist_wheel import bdist_wheel
 except ImportError:
     bdist_wheel = None
+
+if sys.platform == 'win32':
+    from subprocess import list2cmdline
+else:
+    def list2cmdline(cmd_list):
+        return ' '.join(map(pipes.quote, cmd_list))
+
+# ---------------------------------------------------------------------------
+# Top Level Variables
+# ---------------------------------------------------------------------------
+
 
 here = os.path.abspath(os.path.dirname(sys.argv[0]))
 is_repo = os.path.exists(pjoin(here, '.git'))
@@ -90,6 +102,14 @@ def mtime(path):
     return os.stat(path).st_mtime
 
 
+def run(cmd, *args, **kwargs):
+    """Echo a command before running it"""
+    log.info('> ' + list2cmdline(cmd))
+    kwargs.setdefault('cwd', here)
+    kwargs.setdefault('shell', sys.platform == 'win32')
+    return check_call(cmd, *args, **kwargs)
+
+
 def should_run_npm():
     """Test whether npm should be run"""
     if not shutil.which('npm'):
@@ -103,7 +123,7 @@ def should_run_npm():
 def run_npm():
     """Run npm install"""
     log.info("Installing build dependencies with npm")
-    check_call(['npm', 'install', '--progress=false'], cwd=here)
+    run(['npm', 'install', '--progress=false'])
     os.utime(node_modules)
     env = os.environ.copy()
     env['PATH'] = npm_path
