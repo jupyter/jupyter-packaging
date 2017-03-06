@@ -4,19 +4,15 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from glob import glob
-import logging as log
 import os
 from os.path import join as pjoin
-import pipes
+import shutil
 
-# BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
-# update it when the contents of directories change.
-if os.path.exists('MANIFEST'): os.remove('MANIFEST')
-
-from distutils.cmd import Command
-from distutils.command.build_py import build_py
-from distutils.command.sdist import sdist
+from setuptools.cmd import Command
+from setuptools.command import (
+    build_py, sdist, develop, bdist_egg
+)
+from distutils import log
 from subprocess import check_call
 import sys
 
@@ -25,20 +21,31 @@ try:
 except ImportError:
     bdist_wheel = None
 
-if any(arg.startswith('bdist') for arg in sys.argv):
-    from setuptools.command.bdist_egg import bdist_egg
-else:
-    bdist_egg = None
-
-if 'setuptools' in sys.modules:
-    from setuptools.command.develop import develop
-
-
-__all__ = ['create_python_cmdclass', 'create_dual_cmdclass', 'find_packages']
+here = os.path.abspath(os.path.dirname(sys.argv[0]))
+is_repo = os.path.exists(pjoin(here, '.git'))
+node_modules = pjoin(here, 'node_modules')
+npm_path = ':'.join([
+    pjoin(here, 'node_modules', '.bin'),
+    os.environ.get('PATH', os.defpath),
+])
 
 # ---------------------------------------------------------------------------
 # Public Functions
 # ---------------------------------------------------------------------------
+
+
+def get_data_files(top):
+    """Get data files"""
+
+    data_files = []
+    ntrim = len(here + os.path.sep)
+
+    for (d, dirs, filenames) in os.walk(top):
+        data_files.append((
+            d[ntrim:],
+            [pjoin(d, f) for f in filenames]
+        ))
+    return data_files
 
 
 def find_packages(top):
@@ -46,87 +53,30 @@ def find_packages(top):
     Find all of the packages.
     """
     packages = []
-    for dir, subdirs, files in os.walk(top):
-        package = dir.replace(os.path.sep, '.')
-        if '__init__.py' not in files:
-            # Not a package
-            continue
-        packages.append(package)
-    return packages
+    for d, _, _ in os.walk(top):
+        if os.path.exists(pjoin(d, '__init__.py')):
+            packages.append(d.replace(os.path.sep, '.'))
 
 
-def create_python_cmdclass():
-    """Create the cmdclass for a Python only package.
-    """
-    cmdclass = dict(
-        build_py=check_package_data_first(build_py),
-        sdist=sdist
-    )
-    if 'setuptools' in sys.modules:
-        # setup.py develop should check for submodules
-        cmdclass['develop'] = develop
-    if bdist_wheel:
-        cmdclass['bdist_wheel'] = bdist_wheel
-    return cmdclass
-
-
-def create_dual_cmdclass(js_targets):
-    """Create the cmdclass for a dual Python and JavaScript package.
+def create_cmdclass(wrappers=None):
+    """Create a command class with the given optional wrappers.
 
     Parameters
     ----------
-    js_targets: list(paths)
-        a list of JavaScript paths that must be included.
+    wrappers: list(str), optional
+        The cmdclass names to run before running other commands
     """
-    NPM.targets = js_targets
+    egg = bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled
+    wrappers = wrappers or []
     cmdclass = dict(
-        jsdeps=NPM,
-        build_py=check_package_data_first(js_prerelease(build_py)),
-        sdist=js_prerelease(sdist, strict=True)
+        build_py=wrap_command(build_py, wrappers, strict=is_repo),
+        sdist=wrap_command(sdist, strict=True),
+        bdist_egg=egg,
+        develop=wrap_command(develop, wrappers, strict=True)
     )
-    if 'setuptools' in sys.modules:
-        # setup.py develop should check for submodules
-        cmdclass['develop'] = js_prerelease(develop)
     if bdist_wheel:
-        cmdclass['bdist_wheel'] = js_prerelease(bdist_wheel)
+        cmdclass['bdist_wheel'] = wrap_command(bdist_wheel, wrappers)
     return cmdclass
-
-
-# -----------------------------------------------------------------------------
-# Minimal Python version sanity check
-# -----------------------------------------------------------------------------
-
-v = sys.version_info
-if v[:2] < (2, 7) or (v[0] >= 3 and v[:2] < (3, 3)):
-    error = "ERROR: package requires Python version 2.7 or 3.3 or above."
-    print(error, file=sys.stderr)
-    sys.exit(1)
-
-PY3 = (sys.version_info[0] >= 3)
-
-
-# -----------------------------------------------------------------------------
-# get on with it
-# -----------------------------------------------------------------------------
-
-log.basicConfig(level=log.DEBUG)
-log.info('setup.py entered')
-log.info('$PATH=%s' % os.environ['PATH'])
-
-repo_root = os.path.dirname(os.path.abspath(sys.argv[0]))
-is_repo = os.path.exists(pjoin(repo_root, '.git'))
-
-npm_path = os.pathsep.join([
-    pjoin(repo_root, 'node_modules', '.bin'),
-    os.environ.get("PATH", os.defpath),
-])
-
-
-if sys.platform == 'win32':
-    from subprocess import list2cmdline
-else:
-    def list2cmdline(cmd_list):
-        return ' '.join(map(pipes.quote, cmd_list))
 
 
 def mtime(path):
@@ -134,84 +84,28 @@ def mtime(path):
     return os.stat(path).st_mtime
 
 
-def run(cmd, *args, **kwargs):
-    """Echo a command before running it"""
-    log.info('> ' + list2cmdline(cmd))
-    kwargs.setdefault('cwd', repo_root)
-    kwargs.setdefault('shell', sys.platform == 'win32')
-    return check_call(cmd, *args, **kwargs)
+def should_run_npm():
+    """Test whether npm should be run"""
+    if not shutil.which('npm'):
+        log.error("npm unavailable")
+        return False
+    if not os.path.exists(node_modules):
+        return True
+    return mtime(node_modules) < mtime(pjoin(here, 'package.json'))
 
 
-def js_prerelease(command, strict=False):
-    """Decorator for building JavaScript prior to another command"""
-    class DecoratedCommand(command):
-
-        def run(self):
-            jsdeps = self.distribution.get_command_obj('jsdeps')
-            if not is_repo and all(os.path.exists(t) for t in jsdeps.targets):
-                # sdist, nothing to do
-                command.run(self)
-                return
-
-            try:
-                self.distribution.run_command('jsdeps')
-            except Exception as e:
-                missing = [t for t in jsdeps.targets if not os.path.exists(t)]
-                if strict or missing:
-                    log.warn("rebuilding js and css failed")
-                    if missing:
-                        log.error("missing files: %s" % missing)
-                    raise e
-                else:
-                    log.warn("rebuilding js and css failed (not a problem)")
-                    log.warn(str(e))
-            command.run(self)
-            update_package_data(self.distribution)
-    return DecoratedCommand
+def run_npm():
+    """Run npm install"""
+    log.info("Installing build dependencies with npm")
+    check_call(['npm', 'install', '--progress=false'], cwd=here)
+    os.utime(node_modules)
+    env = os.environ.copy()
+    env['PATH'] = npm_path
 
 
-def check_package_data(package_data):
-    """Verify that package_data globs make sense."""
-    log.info("Checking package data")
-    for pkg, data in package_data.items():
-        pkg_root = pjoin(*pkg.split('.'))
-        for d in data:
-            path = pjoin(pkg_root, d)
-            if '*' in path:
-                assert len(glob(path)) > 0, "No files match pattern %s" % path
-            else:
-                assert os.path.exists(path), "Missing package data: %s" % path
-
-
-def check_package_data_first(command):
-    """decorator for checking package_data before running a given command
-
-    Probably only needs to wrap build_py
-    """
-    class DecoratedCommand(command):
-
-        def run(self):
-            check_package_data(self.package_data)
-            command.run(self)
-    return DecoratedCommand
-
-
-def update_package_data(distribution):
-    """update package_data to catch changes during setup"""
-    build_py = distribution.get_command_obj('build_py')
-    # distribution.package_data = find_package_data()
-    # re-init build_py options which load package_data
-    build_py.finalize_options()
-
-
-class NPM(Command):
-    description = "install package.json dependencies using npm"
-
+class BaseCommand(Command):
+    """Dumb empty command because Command needs subclasses to override too much"""
     user_options = []
-
-    node_modules = pjoin(repo_root, 'node_modules')
-
-    targets = []
 
     def initialize_options(self):
         pass
@@ -219,44 +113,50 @@ class NPM(Command):
     def finalize_options(self):
         pass
 
-    def has_npm(self):
-        try:
-            run(['npm', '--version'])
-            return True
-        except Exception as e:
-            log.error(e)
-            return False
+    def get_inputs(self):
+        return []
 
-    def should_run_npm(self):
-        if not os.path.exists(self.node_modules):
-            return True
-        return (mtime(self.node_modules) <
-                mtime(pjoin(repo_root, 'package.json')))
+    def get_outputs(self):
+        return []
+
+
+# ---------------------------------------------------------------------------
+# Private Functions
+# ---------------------------------------------------------------------------
+
+
+def wrap_command(cls, cmds, strict=True):
+    """Wrap a setup command
+
+    Parameters
+    ----------
+    cmds: list(str)
+        The names of the other commands to run prior to the command.
+    strict: boolean, optional
+        Wether to raise errors when a pre-command fails.
+    """
+    class Command(cls):
+
+        def run(self):
+            if not getattr(self, 'uninstall'):
+                try:
+                    [self.run_command(cmd) for cmd in cmds]
+                except Exception:
+                    if strict:
+                        raise
+                    else:
+                        pass
+            return super().run()
+    return Command
+
+
+class bdist_egg_disabled(bdist_egg):
+    """Disabled version of bdist_egg
+    Prevents setup.py install performing setuptools' default easy_install,
+    which it should never ever do.
+    """
 
     def run(self):
-        has_npm = self.has_npm()
-        if not has_npm:
-            log.error(
-                "`npm` unavailable.  If you're running this command" +
-                " using sudo, make sure `npm` is available to sudo"
-            )
+        sys.exit("Aborting implicit building of eggs. Use `pip install .` " +
+                 " to install from source.")
 
-        env = os.environ.copy()
-        env['PATH'] = npm_path
-
-        if has_npm and self.should_run_npm():
-            log.info(
-                "Installing build dependencies with npm.  This may take a " +
-                "while...")
-            run(['npm', 'install'])
-            os.utime(self.node_modules, None)
-
-        for t in self.targets:
-            if not os.path.exists(t):
-                msg = "Missing file: %s" % t
-                if not has_npm:
-                    msg += '\nnpm is required to build a development version'
-                raise ValueError(msg)
-
-        # update package data in case this created new files
-        update_package_data(self.distribution)
