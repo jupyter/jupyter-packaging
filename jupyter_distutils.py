@@ -6,12 +6,14 @@
 
 import os
 from os.path import join as pjoin
+import functools
 import shutil
 
-from setuptools.cmd import Command
-from setuptools.command import (
-    build_py, sdist, develop, bdist_egg
-)
+from distutils.cmd import Command
+from setuptools.command.build_py import build_py
+from setuptools.command.sdist import sdist
+from setuptools.command.develop import develop
+from setuptools.command.bdist_egg import bdist_egg
 from distutils import log
 from subprocess import check_call
 import sys
@@ -58,24 +60,28 @@ def find_packages(top):
             packages.append(d.replace(os.path.sep, '.'))
 
 
-def create_cmdclass(wrappers=None):
+def create_cmdclass(wrappers=None, data_dirs=None):
     """Create a command class with the given optional wrappers.
 
     Parameters
     ----------
     wrappers: list(str), optional
         The cmdclass names to run before running other commands
+    data_dirs: list(str), optional.
+        The directories containing static data.
     """
     egg = bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled
     wrappers = wrappers or []
+    data_dirs = data_dirs or []
+    wrapper = functools.partial(wrap_command, wrappers, data_dirs)
     cmdclass = dict(
-        build_py=wrap_command(build_py, wrappers, strict=is_repo),
-        sdist=wrap_command(sdist, strict=True),
+        build_py=wrapper(build_py, strict=is_repo),
+        sdist=wrapper(sdist, strict=True),
         bdist_egg=egg,
-        develop=wrap_command(develop, wrappers, strict=True)
+        develop=wrapper(develop, strict=True)
     )
     if bdist_wheel:
-        cmdclass['bdist_wheel'] = wrap_command(bdist_wheel, wrappers)
+        cmdclass['bdist_wheel'] = wrapper(bdist_wheel, strict=True)
     return cmdclass
 
 
@@ -125,7 +131,7 @@ class BaseCommand(Command):
 # ---------------------------------------------------------------------------
 
 
-def wrap_command(cls, cmds, strict=True):
+def wrap_command(cmds, data_dirs, cls, strict=True):
     """Wrap a setup command
 
     Parameters
@@ -138,7 +144,7 @@ def wrap_command(cls, cmds, strict=True):
     class Command(cls):
 
         def run(self):
-            if not getattr(self, 'uninstall'):
+            if not getattr(self, 'uninstall', None):
                 try:
                     [self.run_command(cmd) for cmd in cmds]
                 except Exception:
@@ -146,7 +152,14 @@ def wrap_command(cls, cmds, strict=True):
                         raise
                     else:
                         pass
-            return super().run()
+
+            result = super().run()
+            data_files = []
+            for dname in data_dirs:
+                data_files.extend(get_data_files(dname))
+            # update data-files in case this created new files
+            self.distribution.data_files = data_files
+            return result
     return Command
 
 
