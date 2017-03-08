@@ -170,16 +170,17 @@ def mtime(path):
     return os.stat(path).st_mtime
 
 
-def install_npm(path, build_dir, source_dir, build_cmd='build'):
+def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build'):
     """Return a Command for managing an npm installation.
 
     Parameters
     ----------
-    path: str
-        The base path of the node package.
-    build_dir: str
-        The target build directory.
-    source_dir: str
+    path: str, optional
+        The base path of the node package.  Defaults to the repo root.
+    build_dir: str, optional
+        The target build directory.  If this and source_dir are given,
+        the JavaScript will only be build if necessary.
+    source_dir: str, optional
         The source code directory.
     build_cmd: str, optional
         The npm command to build assets to the build_dir.
@@ -192,7 +193,7 @@ def install_npm(path, build_dir, source_dir, build_cmd='build'):
             if skip_npm:
                 log.info('Skipping npm-installation')
                 return
-            node_package = path
+            node_package = path or here
             node_modules = pjoin(node_package, 'node_modules')
 
             if not which("npm"):
@@ -202,8 +203,13 @@ def install_npm(path, build_dir, source_dir, build_cmd='build'):
                 log.info('Installing build dependencies with npm.  This may '
                          'take a while...')
                 run(['npm', 'install'], cwd=node_package)
-            if is_stale(build_dir, source_dir):
+            if build_dir and source_dir:
+                should_build = is_stale(build_dir, source_dir)
+            else:
+                should_build = True
+            if should_build:
                 run(['npm', 'run', build_cmd], cwd=node_package)
+
     return NPM
 
 
