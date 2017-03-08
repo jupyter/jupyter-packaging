@@ -12,9 +12,11 @@ Below is an example `setup.py` that uses jupyter-packaging:
 
 ```py
 from setuptools import setup
-from jupyter-packaging import (
-    create_cmdclass, should_run_npm, run_npm, BaseCommand
-)
+from jupyter_packaging import create_cmdclass, install_npm
+
+
+cmdclass = create_cmdclass(['js'])
+cmdclass['js'] = install_npm()
 
 setup_args = dict(
     name             = 'PROJECT_NAME',
@@ -39,22 +41,11 @@ setup_args = dict(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
+    cmdclass         = cmdclass,
+    install_requires = [
+        'notebook>=4.3.0',
+    ]
 )
-
-
-class NPM(BaseCommand):
-    description = 'install package.json dependencies using npm'
-
-    def run(self):
-        if should_run_npm():
-            run_npm()
-
-
-setup_args['cmdclass'] = create_cmdclass(['js'])
-setup_args['cmdclass']['js'] = NPM
-setup_args['install_requires'] = [
-    'notebook>=4.3.0',
-]
 
 if __name__ == '__main__':
     setup(**setup_args)
