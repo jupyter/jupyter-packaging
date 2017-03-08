@@ -16,7 +16,7 @@ from setuptools.command.develop import develop
 from setuptools.command.bdist_egg import bdist_egg
 from distutils import log
 from subprocess import check_call
-from distutils.spawn import find_executable as which
+from distutils.spawn import find_executable
 import sys
 
 try:
@@ -196,7 +196,7 @@ def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build'):
             node_package = path or here
             node_modules = pjoin(node_package, 'node_modules')
 
-            if not which("npm"):
+            if not find_executable("npm"):
                 log.error("`npm` unavailable.  If you're running this command "
                           "using sudo, make sure `npm` is availble to sudo")
             if is_stale(node_modules, pjoin(node_package, 'package.json')):
