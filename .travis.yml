@@ -1,0 +1,13 @@
+language: python
+python:
+    - 3.5
+    - 2.7
+sudo: false
+env:
+install:
+    - pip install .
+script:
+    - python setup.py --version
+    - python setup.py build_py
+    - python setup.py sdist
+
