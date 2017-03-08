@@ -181,7 +181,7 @@ def wrap_command(cmds, data_dirs, cls, strict=True):
                     else:
                         pass
 
-            result = Command().run(self)
+            result = super(Command, self).run()
             data_files = []
             for dname in data_dirs:
                 data_files.extend(get_data_files(dname))
