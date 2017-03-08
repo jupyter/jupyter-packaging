@@ -169,7 +169,19 @@ def mtime(path):
 
 
 def install_npm(path, build_dir, source_dir, build_cmd='build'):
-    """Return a Command for running npm install and npm build at a given path."""
+    """Return a Command for managing an npm installation.
+
+    Parameters
+    ----------
+    path: str
+        The base path of the node package.
+    build_dir: str
+        The target build directory.
+    source_dir: str
+        The source code directory.
+    build_cmd: str, optional
+        The command to build assets to the build_dir.
+    """
 
     class NPM(BaseCommand):
         description = 'install package.json dependencies using npm'
