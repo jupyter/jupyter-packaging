@@ -9,7 +9,7 @@ from os.path import join as pjoin
 import functools
 import pipes
 
-from distutils.cmd import Command
+from setuptools import Command
 from setuptools.command.build_py import build_py
 from setuptools.command.sdist import sdist
 from setuptools.command.develop import develop
