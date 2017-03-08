@@ -199,6 +199,7 @@ def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build'):
             if not find_executable("npm"):
                 log.error("`npm` unavailable.  If you're running this command "
                           "using sudo, make sure `npm` is availble to sudo")
+                return
             if is_stale(node_modules, pjoin(node_package, 'package.json')):
                 log.info('Installing build dependencies with npm.  This may '
                          'take a while...')
