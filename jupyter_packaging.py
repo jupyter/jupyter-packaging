@@ -182,7 +182,7 @@ def install_npm(path, build_dir, source_dir, build_cmd='build'):
     source_dir: str
         The source code directory.
     build_cmd: str, optional
-        The command to build assets to the build_dir.
+        The npm command to build assets to the build_dir.
     """
 
     class NPM(BaseCommand):
