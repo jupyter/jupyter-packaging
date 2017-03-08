@@ -134,7 +134,7 @@ def run_npm():
 
 
 class BaseCommand(Command):
-    """Dumb empty command because Command needs subclasses to override too much"""
+    """Empty command because Command needs subclasses to override too much"""
     user_options = []
 
     def initialize_options(self):
@@ -169,7 +169,7 @@ def wrap_command(cmds, data_dirs, cls, strict=True):
     strict: boolean, optional
         Wether to raise errors when a pre-command fails.
     """
-    class Command(cls):
+    class WrappedCommand(cls):
 
         def run(self):
             if not getattr(self, 'uninstall', None):
@@ -181,14 +181,14 @@ def wrap_command(cmds, data_dirs, cls, strict=True):
                     else:
                         pass
 
-            result = super(Command, self).run()
+            result = super(WrappedCommand, self).run()
             data_files = []
             for dname in data_dirs:
                 data_files.extend(get_data_files(dname))
             # update data-files in case this created new files
             self.distribution.data_files = data_files
             return result
-    return Command
+    return WrappedCommand
 
 
 class bdist_egg_disabled(bdist_egg):
@@ -205,7 +205,7 @@ class bdist_egg_disabled(bdist_egg):
 try:
     from shutil import which
 except ImportError:
-    ## which() function copied from Python 3.4.3; PSF license
+    # which() function copied from Python 3.4.3; PSF license
     def which(cmd, mode=os.F_OK | os.X_OK, path=None):
         """Given a command, mode, and a PATH string, return the path which
         conforms to the given mode on the PATH, or None if there is no such
@@ -218,12 +218,12 @@ except ImportError:
         # Additionally check that `file` is not a directory, as on Windows
         # directories pass the os.access check.
         def _access_check(fn, mode):
-            return (os.path.exists(fn) and os.access(fn, mode)
-                    and not os.path.isdir(fn))
+            return (os.path.exists(fn) and os.access(fn, mode) and
+                    not os.path.isdir(fn))
 
-        # If we're given a path with a directory part, look it up directly rather
-        # than referring to PATH directories. This includes checking relative to the
-        # current directory, e.g. ./script
+        # If we're given a path with a directory part, look it up directly
+        # rather than referring to PATH directories. This includes checking
+        # relative to the current directory, e.g. ./script
         if os.path.dirname(cmd):
             if _access_check(cmd, mode):
                 return cmd
@@ -237,12 +237,13 @@ except ImportError:
 
         if sys.platform == "win32":
             # The current directory takes precedence on Windows.
-            if not os.curdir in path:
+            if os.curdir not in path:
                 path.insert(0, os.curdir)
 
             # PATHEXT is necessary to check on Windows.
             pathext = os.environ.get("PATHEXT", "").split(os.pathsep)
-            # See if the given file matches any of the expected path extensions.
+            # See if the given file matches any of the expected path
+            # extensions.
             # This will allow us to short circuit when given "python.exe".
             # If it does match, only test that one, otherwise we have to try
             # others.
@@ -258,7 +259,7 @@ except ImportError:
         seen = set()
         for dir in path:
             normdir = os.path.normcase(dir)
-            if not normdir in seen:
+            if normdir not in seen:
                 seen.add(normdir)
                 for thefile in files:
                     name = os.path.join(dir, thefile)
