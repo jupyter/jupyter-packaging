@@ -8,11 +8,13 @@ Tools to help build and install Jupyter Python packages
 
 ## Usage
 
-Below is an example `setup.py` that uses jupyter-packaging:
+Below is an example `setup.py` that uses jupyter-packaging.  The 
+contents of `jupyter_packaging.py` are copied locally to `setupbase.py`
+so they are available to run the `setup.py` script itself.
 
 ```py
 from setuptools import setup
-from jupyter_packaging import create_cmdclass, install_npm
+from setupbase import create_cmdclass, install_npm
 
 
 cmdclass = create_cmdclass(['js'])
