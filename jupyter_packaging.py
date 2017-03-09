@@ -108,7 +108,7 @@ def create_cmdclass(wrappers=None, data_dirs=None):
 
 
 def run(cmd, *args, **kwargs):
-    """Echo a command before running it"""
+    """Echo a command before running it.  Defaults to repo as cwd"""
     log.info('> ' + list2cmdline(cmd))
     kwargs.setdefault('cwd', here)
     kwargs.setdefault('shell', sys.platform == 'win32')
