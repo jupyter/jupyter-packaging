@@ -10,4 +10,4 @@ script:
     - python setup.py --version
     - python setup.py build_py
     - python setup.py sdist
-    - python -c "from jupyter_packaging import find_executable; assert find_executabl('python')"
+    - python -c "from jupyter_packaging import find_executable; assert find_executable('python')"
