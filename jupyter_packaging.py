@@ -47,7 +47,7 @@ npm_path = ':'.join([
 ])
 
 if "--skip-npm" in sys.argv:
-    print("Skipping install of webtools as requested.")
+    print("Skipping npm install as requested.")
     skip_npm = True
     sys.argv.remove("--skip-npm")
 else:
