@@ -6,7 +6,7 @@
 
 from __future__ import print_function
 from setuptools import setup
-from jupyter_packaging.setupbase import (
+from jupyter_packaging import (
     __version__, create_cmdclass, find_packages
 )
 
