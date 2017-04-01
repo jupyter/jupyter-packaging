@@ -6,13 +6,15 @@
 
 from __future__ import print_function
 from setuptools import setup
-from jupyter_packaging import __version__, create_cmdclass
+from jupyter_packaging.setupbase import (
+    create_cmdclass, find_packages, __version__
+)
 
 
 setup_args = dict(
     name            = 'jupyter-packaging',
     version         = __version__,
-    py_modules      = ['jupyter_packaging'],
+    packages        = find_packages('.'),
     description     = "Jupyter Packaging Utilities",
     long_description= """
     This package contains utilities for making Python packages with
