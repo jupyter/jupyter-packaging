@@ -122,7 +122,8 @@ def is_stale(target, source):
     """
     if not os.path.exists(target):
         return True
-    return mtime(target) < mtime(source)
+    target_mtime = recursive_mtime(target)
+    return compare_recursive_mtime(source, cutoff=target_mtime)
 
 
 class BaseCommand(Command):
@@ -162,6 +163,38 @@ def combine_commands(*commands):
             for c in self.commands:
                 c.run()
     return CombinedCommand
+
+
+def compare_recursive_mtime(path, cutoff, newest=True):
+    """Gets the newest/oldest mtime for all files in a directory.
+
+    If cutoff is another mtime, it will return True if it finds
+    an mtime that is newer/older than the cutoff. E.g. if newest=True,
+    and a file in path is newer than the cutoff, it will return True.
+    """
+    for dirname, _, filenames in os.walk(path, topdown=False):
+        for filename in filenames:
+            mt = mtime(pjoin(dirname, filename))
+            if newest:  # Put outside of loop?
+                if mt > cutoff:
+                    return True
+            elif mt < cutoff:
+                return True
+    return False
+
+
+def recursive_mtime(path, newest=True):
+    """Gets the newest/oldest mtime for all files in a directory."""
+    current_extreme = None
+    for dirname, _, filenames in os.walk(path, topdown=False):
+        for filename in filenames:
+            mt = mtime(pjoin(dirname, filename))
+            if newest:  # Put outside of loop?
+                if mt >= (current_extreme or mt):
+                    current_extreme = mt
+            elif mt <= (current_extreme or mt):
+                current_extreme = mt
+    return current_extreme
 
 
 def mtime(path):
