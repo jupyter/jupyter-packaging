@@ -166,11 +166,12 @@ def combine_commands(*commands):
 
 
 def compare_recursive_mtime(path, cutoff, newest=True):
-    """Gets the newest/oldest mtime for all files in a directory.
+    """Compare the newest/oldest mtime for all files in a directory.
 
-    If cutoff is another mtime, it will return True if it finds
-    an mtime that is newer/older than the cutoff. E.g. if newest=True,
-    and a file in path is newer than the cutoff, it will return True.
+    Cutoff should be another mtime to be compared against. If an mtime that is
+    newer/older than the cutoff is found it will return True.
+    E.g. if newest=True, and a file in path is newer than the cutoff, it will
+    return True.
     """
     for dirname, _, filenames in os.walk(path, topdown=False):
         for filename in filenames:
