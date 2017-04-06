@@ -5,9 +5,11 @@ python:
 sudo: false
 env:
 install:
+    - pip install pytest
     - pip install .
 script:
     - python setup.py --version
     - python setup.py build_py
     - python setup.py sdist
-    - python -c "from jupyter_packaging import which; assert which('python')"
+    - py.test
+
