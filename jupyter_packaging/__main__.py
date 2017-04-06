@@ -19,16 +19,22 @@ def check_dir(dirpath):
             'Given path is not a directory: %s' % dirpath)
     return os.path.abspath(dirpath)
 
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument(
-    'destination', type=check_dir, default='.', nargs='?',
-    help="The directory to copy setupbase.py to.",
-    )
 
-args = parser.parse_args()
+def main(args=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        'destination', type=check_dir, default='.', nargs='?',
+        help="The directory to copy setupbase.py to.",
+        )
 
-here = os.path.dirname(__file__)
-source = os.path.join(here, 'setupbase.py')
-destination = args.destination
+    args = parser.parse_args(args)
 
-shutil.copy(source, destination)
+    here = os.path.dirname(__file__)
+    source = os.path.join(here, 'setupbase.py')
+    destination = args.destination
+
+    shutil.copy(source, destination)
+
+
+if __name__ == '__main__':
+    main()
