@@ -8,6 +8,7 @@ import os
 from os.path import join as pjoin
 import functools
 import pipes
+import sys
 
 from setuptools import Command
 from setuptools.command.build_py import build_py
@@ -16,7 +17,6 @@ from setuptools.command.develop import develop
 from setuptools.command.bdist_egg import bdist_egg
 from distutils import log
 from subprocess import check_call
-import sys
 
 try:
     from wheel.bdist_wheel import bdist_wheel
@@ -79,6 +79,12 @@ def find_packages(top):
     for d, _, _ in os.walk(top):
         if os.path.exists(pjoin(d, '__init__.py')):
             packages.append(d.replace(os.path.sep, '.'))
+
+
+def update_package_data(distribution):
+    """update build_py options to get package_data changes"""
+    build_py = distribution.get_command_obj('build_py')
+    build_py.finalize_options()
 
 
 def create_cmdclass(wrappers=None, data_dirs=None):
@@ -334,6 +340,8 @@ def wrap_command(cmds, data_dirs, cls, strict=True):
                 data_files.extend(get_data_files(dname))
             # update data-files in case this created new files
             self.distribution.data_files = data_files
+            # also update package data
+            update_package_data(self.distribution)
             return result
     return WrappedCommand
 
