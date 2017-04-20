@@ -128,7 +128,7 @@ def is_stale(target, source):
     """
     if not os.path.exists(target):
         return True
-    target_mtime = recursive_mtime(target)
+    target_mtime = recursive_mtime(target) or 0
     return compare_recursive_mtime(source, cutoff=target_mtime)
 
 
@@ -179,6 +179,13 @@ def compare_recursive_mtime(path, cutoff, newest=True):
     E.g. if newest=True, and a file in path is newer than the cutoff, it will
     return True.
     """
+    if os.path.isfile(path):
+        mt = mtime(path)
+        if newest:
+            if mt > cutoff:
+                return True
+        elif mt < cutoff:
+            return True
     for dirname, _, filenames in os.walk(path, topdown=False):
         for filename in filenames:
             mt = mtime(pjoin(dirname, filename))
@@ -192,6 +199,8 @@ def compare_recursive_mtime(path, cutoff, newest=True):
 
 def recursive_mtime(path, newest=True):
     """Gets the newest/oldest mtime for all files in a directory."""
+    if os.path.isfile(path):
+        return mtime(path)
     current_extreme = None
     for dirname, _, filenames in os.walk(path, topdown=False):
         for filename in filenames:
