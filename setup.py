@@ -5,16 +5,20 @@
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
+import os
 from setuptools import setup
 from jupyter_packaging.setupbase import (
     create_cmdclass, find_packages, __version__
 )
 
 
+here = os.path.dirname(__file__)
+
+
 setup_args = dict(
     name            = 'jupyter-packaging',
     version         = __version__,
-    packages        = find_packages('.'),
+    packages        = find_packages(here),
     description     = "Jupyter Packaging Utilities",
     long_description= """
     This package contains utilities for making Python packages with
