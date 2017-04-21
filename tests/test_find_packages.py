@@ -26,3 +26,14 @@ def test_finds_subpackages(tmpdir):
                 'packageB', 'packageB.sub1', 'packageB.sub2']
     assert expected == find_packages(str(tmpdir))
 
+
+def test_finds_only_direct_subpackages(tmpdir):
+    a = tmpdir.mkdir('packageA')
+    sub_a1 = a.mkdir('sub1')
+    sub_a2 = a.mkdir('sub2')
+    # No __init__.py in packageA:
+    for d in (sub_a1, sub_a2):
+        d.join('__init__.py').write('')
+
+    expected = []
+    assert expected == find_packages(str(tmpdir))
