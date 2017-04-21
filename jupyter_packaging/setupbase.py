@@ -76,9 +76,13 @@ def find_packages(top):
     Find all of the packages.
     """
     packages = []
-    for d, _, _ in os.walk(top):
+    for d, dirs, _ in os.walk(top, followlinks=True):
         if os.path.exists(pjoin(d, '__init__.py')):
-            packages.append(d.replace(os.path.sep, '.'))
+            packages.append(os.path.relpath(d, top).replace(os.path.sep, '.'))
+        elif d != top:
+            # Do not look for packages in subfolders if current is not a package
+            dirs[:] = []
+    return packages
 
 
 def update_package_data(distribution):
