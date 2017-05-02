@@ -4,11 +4,18 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+"""
+This file originates from the 'jupyter-packaging' package, and
+contains a set of useful utilities for including npm packages
+within a Python package.
+"""
+
 import os
 from os.path import join as pjoin
 import functools
 import pipes
 import sys
+from subprocess import check_call
 
 from setuptools import Command
 from setuptools.command.build_py import build_py
@@ -16,7 +23,6 @@ from setuptools.command.sdist import sdist
 from setuptools.command.develop import develop
 from setuptools.command.bdist_egg import bdist_egg
 from distutils import log
-from subprocess import check_call
 
 try:
     from wheel.bdist_wheel import bdist_wheel
@@ -63,7 +69,7 @@ def get_data_files(top):
     data_files = []
     ntrim = len(here + os.path.sep)
 
-    for (d, dirs, filenames) in os.walk(top):
+    for (d, _, filenames) in os.walk(top):
         data_files.append((
             d[ntrim:],
             [pjoin(d, f) for f in filenames]
@@ -225,6 +231,8 @@ def mtime(path):
 def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build', force=False):
     """Return a Command for managing an npm installation.
 
+    Note: The command is skipped if the `--skip-npm` flag is used.
+
     Parameters
     ----------
     path: str, optional
@@ -264,6 +272,26 @@ def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build', f
                 run(['npm', 'run', build_cmd], cwd=node_package)
 
     return NPM
+
+
+def ensure_targets(targets):
+    """Return a Command that checks that certain files exist.
+
+    Raises a ValueError if any of the files are missing.
+
+    Note: The check is skipped if the `--skip-npm` flag is used.
+    """
+
+    class TargetsCheck(BaseCommand):
+        def run(self):
+            if skip_npm:
+                log.info('Skipping target checks')
+                return
+            missing = [t for t in targets if not os.path.exists(t)]
+            if missing:
+                raise ValueError(('missing files: %s' % missing))
+
+    return TargetsCheck
 
 
 # `shutils.which` function copied verbatim from the Python-3.3 source.
