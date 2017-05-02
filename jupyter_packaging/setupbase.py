@@ -4,11 +4,18 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+"""
+This file originates from the 'jupyter-packaging' package, and
+contains a set of useful utilities for including npm packages
+within a Python package.
+"""
+
 import os
 from os.path import join as pjoin
 import functools
 import pipes
 import sys
+from subprocess import check_call
 
 from setuptools import Command
 from setuptools.command.build_py import build_py
@@ -16,7 +23,6 @@ from setuptools.command.sdist import sdist
 from setuptools.command.develop import develop
 from setuptools.command.bdist_egg import bdist_egg
 from distutils import log
-from subprocess import check_call
 
 try:
     from wheel.bdist_wheel import bdist_wheel
@@ -63,7 +69,7 @@ def get_data_files(top):
     data_files = []
     ntrim = len(here + os.path.sep)
 
-    for (d, dirs, filenames) in os.walk(top):
+    for (d, _, filenames) in os.walk(top):
         data_files.append((
             d[ntrim:],
             [pjoin(d, f) for f in filenames]
