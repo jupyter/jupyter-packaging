@@ -225,6 +225,8 @@ def mtime(path):
 def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build', force=False):
     """Return a Command for managing an npm installation.
 
+    Note: The command is skipped if the `--skip-npm` flag is used.
+
     Parameters
     ----------
     path: str, optional
@@ -264,6 +266,26 @@ def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build', f
                 run(['npm', 'run', build_cmd], cwd=node_package)
 
     return NPM
+
+
+def ensure_targets(targets):
+    """Return a Command that checks that certain files exist.
+
+    Raises a ValueError if any of the files are missing.
+
+    Note: The check is skipped if the `--skip-npm` flag is used.
+    """
+
+    class TargetsCheck(BaseCommand):
+        def run(self):
+            if skip_npm:
+                log.info('Skipping target checks')
+                return
+            missing = [t for t in targets if not os.path.exists(t)]
+            if missing:
+                raise ValueError(('missing files: %s' % missing))
+
+    return TargetsCheck
 
 
 # `shutils.which` function copied verbatim from the Python-3.3 source.
