@@ -15,6 +15,7 @@ from os.path import join as pjoin
 import functools
 import pipes
 import sys
+from glob import glob
 from subprocess import check_call
 
 from setuptools import Command
@@ -63,17 +64,18 @@ else:
 # ---------------------------------------------------------------------------
 
 
-def get_data_files(top):
-    """Get data files"""
+def expand_data_files(data_file_patterns):
+    """Expand data file patterns to a valid data_files spec.
 
+    Parameters
+    -----------
+    data_file_patterns: list(tuple)
+        A list of (directory, glob pattern) for the data file locations.
+    """
     data_files = []
-    ntrim = len(here + os.path.sep)
-
-    for (d, _, filenames) in os.walk(top):
-        data_files.append((
-            d[ntrim:],
-            [pjoin(d, f) for f in filenames]
-        ))
+    for (directory, pattern) in data_file_patterns:
+        files = [os.path.relpath(f, '.') for f in glob(pattern)]
+        data_files.append((directory, files))
     return data_files
 
 
@@ -97,20 +99,17 @@ def update_package_data(distribution):
     build_py.finalize_options()
 
 
-def create_cmdclass(wrappers=None, data_dirs=None):
+def create_cmdclass(wrappers=None):
     """Create a command class with the given optional wrappers.
 
     Parameters
     ----------
     wrappers: list(str), optional
         The cmdclass names to run before running other commands
-    data_dirs: list(str), optional.
-        The directories containing static data.
     """
     egg = bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled
     wrappers = wrappers or []
-    data_dirs = data_dirs or []
-    wrapper = functools.partial(wrap_command, wrappers, data_dirs)
+    wrapper = functools.partial(wrap_command, wrappers)
     cmdclass = dict(
         build_py=wrapper(build_py, strict=is_repo),
         sdist=wrapper(sdist, strict=True),
@@ -353,7 +352,7 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None):
 # ---------------------------------------------------------------------------
 
 
-def wrap_command(cmds, data_dirs, cls, strict=True):
+def wrap_command(cmds, cls, strict=True):
     """Wrap a setup command
 
     Parameters
@@ -376,12 +375,6 @@ def wrap_command(cmds, data_dirs, cls, strict=True):
                         pass
 
             result = cls.run(self)
-            if data_dirs:
-                data_files = self.distribution.data_files if self.distribution.data_files else []
-                for dname in data_dirs:
-                    data_files.extend(get_data_files(dname))
-                # update data-files in case this created new files
-                self.distribution.data_files = data_files
             # update package data
             update_package_data(self.distribution)
             return result
