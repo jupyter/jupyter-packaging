@@ -70,11 +70,14 @@ def expand_data_files(data_file_patterns):
     Parameters
     -----------
     data_file_patterns: list(tuple)
-        A list of (directory, glob pattern) for the data file locations.
+        A list of (directory, glob patterns) for the data file locations.
+        The globs themselves do not recurse.
     """
     data_files = []
-    for (directory, pattern) in data_file_patterns:
-        files = [os.path.relpath(f, here) for f in glob(pattern)]
+    for (directory, patterns) in data_file_patterns:
+        files = []
+        for p in patterns:
+            files.extend([os.path.relpath(f, here) for f in glob(p)])
         data_files.append((directory, files))
     return data_files
 
