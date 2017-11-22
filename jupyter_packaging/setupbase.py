@@ -9,20 +9,26 @@ This file originates from the 'jupyter-packaging' package, and
 contains a set of useful utilities for including npm packages
 within a Python package.
 """
-
-import os
 from os.path import join as pjoin
+import io
+import os
+import fnmatch
 import functools
 import pipes
+import shlex
+import subprocess
 import sys
-from glob import glob
-from subprocess import check_call
 
-from setuptools import Command
-from setuptools.command.build_py import build_py
-from setuptools.command.sdist import sdist
-from setuptools.command.develop import develop
-from setuptools.command.bdist_egg import bdist_egg
+
+# BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
+# update it when the contents of directories change.
+if os.path.exists('MANIFEST'): os.remove('MANIFEST')
+
+
+from distutils.core import setup
+from distutils.cmd import Command
+from distutils.command.build_py import build_py
+from distutils.command.sdist import sdist
 from distutils import log
 
 try:
@@ -37,18 +43,18 @@ else:
         return ' '.join(map(pipes.quote, cmd_list))
 
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 # ---------------------------------------------------------------------------
 # Top Level Variables
 # ---------------------------------------------------------------------------
 
-here = os.path.dirname(__file__)
-is_repo = os.path.exists(pjoin(here, '.git'))
-node_modules = pjoin(here, 'node_modules')
+HERE = os.path.abspath(os.path.dirname(__file__))
+is_repo = os.path.exists(pjoin(HERE, '.git'))
+node_modules = pjoin(HERE, 'node_modules')
 
 npm_path = ':'.join([
-    pjoin(here, 'node_modules', '.bin'),
+    pjoin(HERE, 'node_modules', '.bin'),
     os.environ.get('PATH', os.defpath),
 ])
 
@@ -59,30 +65,105 @@ if "--skip-npm" in sys.argv:
 else:
     skip_npm = False
 
+
+# For some commands, use setuptools.  Note that we do NOT list install here!
+if 'develop' in sys.argv or any(a.startswith('bdist') for a in sys.argv):
+    import setuptools
+
+
 # ---------------------------------------------------------------------------
 # Public Functions
 # ---------------------------------------------------------------------------
 
 
-def expand_data_files(data_file_patterns):
-    """Expand data file patterns to a valid data_files spec.
+def get_data_files(file_patterns):
+    """Expand file patterns to a list of `data_files` paths.
 
     Parameters
     -----------
-    data_file_patterns: list(tuple)
-        A list of (directory, glob patterns) for the data file locations.
-        The globs themselves do not recurse.
+    file_patterns: list or str
+        A list of glob patterns for the data file locations.
+        The globs can be recursive if they include a `**`.
+        They should be relative paths from the root directory or
+        absolute paths.
+
+    Note:
+    Files in `node_modules` are ignored.
     """
-    data_files = []
-    for (directory, patterns) in data_file_patterns:
-        files = []
-        for p in patterns:
-            files.extend([os.path.relpath(f, here) for f in glob(p)])
-        data_files.append((directory, files))
-    return data_files
+    if not isinstance(file_patterns, (list, tuple)):
+        file_patterns = [file_patterns]
+    files = []
+    for pattern in file_patterns:
+        pattern = os.path.relpath(pattern, HERE)
+        pattern = pjoin(HERE, pattern)
+        if '**' in pattern:
+            matches = []
+            base, _, rest = pattern.partition('**')
+            for root, dirnames, _ in os.walk(base):
+                # Don't recurse into node_modules
+                if 'node_modules' in dirnames:
+                    dirnames.remove('node_modules')
+                matches.extend(find_files(pjoin(root, rest)))
+        else:
+            matches = find_files(HERE, pattern)
+        files.extend([os.path.relpath(f, HERE) for f in matches])
+    return files
 
 
-def find_packages(top):
+def get_package_data(root, file_patterns=None):
+    """Expand file patterns to a list of `package_data` paths.
+
+    Parameters
+    -----------
+    root: str
+        The relative path to the package root from `HERE`.
+    file_patterns: list or str, optional
+        A list of glob patterns for the data file locations.
+        The globs can be recursive if they include a `**`.
+        They should be relative paths from the root or
+        absolute paths.  If not given, all files will be used.
+
+    Note:
+    Files in `node_modules` are ignored.
+    """
+    if file_patterns is None:
+        file_patterns = ['*']
+    if not isinstance(file_patterns, (list, tuple)):
+        file_patterns = [file_patterns]
+    files = get_data_files([pjoin(root, f) for f in file_patterns])
+    return [os.path.relpath(f, root) for f in files]
+
+
+def get_version(file, name='__version__'):
+    """Get the version of the package from the given file by
+    executing it and extracting the given `name`.
+    """
+    path = os.path.realpath(file)
+    version_ns = {}
+    with io.open(path, encoding="utf8") as f:
+        exec(f.read(), {}, version_ns)
+    return version_ns[name]
+
+
+def ensure_python(specs):
+    """Given a list of range specifiers for python, ensure compatibility.
+    """
+    if not isinstance(specs, (list, tuple)):
+        specs = [specs]
+    v = sys.version_info
+    part = '%s.%s' % (v.major, v.minor)
+    for spec in specs:
+        if part == spec:
+            return
+        try:
+            if eval(part + spec):
+                return
+        except SyntaxError:
+            pass
+    raise ValueError('Python version %s unsupported' % part)
+
+
+def find_packages(top=HERE):
     """
     Find all of the packages.
     """
@@ -102,36 +183,51 @@ def update_package_data(distribution):
     build_py.finalize_options()
 
 
-def create_cmdclass(wrappers=None):
-    """Create a command class with the given optional wrappers.
+def create_cmdclass(prerelease_cmd=None):
+    """Create a command class with the given optional prerelease class.
 
     Parameters
     ----------
-    wrappers: list(str), optional
-        The cmdclass names to run before running other commands
+    prerelease_cmd: str, optional
+        The name of the command to run before releasing.  It must be
+        added to the cmdclass afterward.
     """
-    egg = bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled
-    wrappers = wrappers or []
-    wrapper = functools.partial(wrap_command, wrappers)
+
+    wrapped = [prerelease_cmd] if prerelease_cmd else []
+    wrapper = functools.partial(wrap_command, wrapped)
     cmdclass = dict(
         build_py=wrapper(build_py, strict=is_repo),
-        sdist=wrapper(sdist, strict=True),
-        bdist_egg=egg,
-        develop=wrapper(develop, strict=True)
+        sdist=wrapper(sdist, strict=True)
     )
     if bdist_wheel:
         cmdclass['bdist_wheel'] = wrapper(bdist_wheel, strict=True)
+    if 'develop' in sys.argv:
+        from setuptools.command.develop import develop
+        cmdclass['develop'] = wrapper(develop, strict=True)
     return cmdclass
 
 
-def run(cmd, *args, **kwargs):
+def command_for_func(func):
+    """Create a command that calls the given function."""
+
+    class FuncCommand(BaseCommand):
+
+        def run(self):
+            func()
+            update_package_data(self.distribution)
+
+    return FuncCommand
+
+
+def run(cmd, **kwargs):
     """Echo a command before running it.  Defaults to repo as cwd"""
     log.info('> ' + list2cmdline(cmd))
-    kwargs.setdefault('cwd', here)
-    kwargs.setdefault('shell', sys.platform == 'win32')
-    if not isinstance(cmd, list):
-        cmd = cmd.split()
-    return check_call(cmd, *args, **kwargs)
+    kwargs.setdefault('cwd', HERE)
+    kwargs.setdefault('shell', os.name == 'nt')
+    if not isinstance(cmd, (list, tuple)) and os.name != 'nt':
+        cmd = shlex.split(cmd)
+    cmd[0] = which(cmd[0])
+    return subprocess.check_call(cmd, **kwargs)
 
 
 def is_stale(target, source):
@@ -214,7 +310,10 @@ def recursive_mtime(path, newest=True):
     if os.path.isfile(path):
         return mtime(path)
     current_extreme = None
-    for dirname, _, filenames in os.walk(path, topdown=False):
+    for dirname, dirnames, filenames in os.walk(path, topdown=False):
+        # Don't recurse into node_modules
+        if 'node_modules' in dirnames:
+            dirnames.remove('node_modules')
         for filename in filenames:
             mt = mtime(pjoin(dirname, filename))
             if newest:  # Put outside of loop?
@@ -230,7 +329,7 @@ def mtime(path):
     return os.stat(path).st_mtime
 
 
-def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build', force=False):
+def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build', force=False, npm=None):
     """Return a Command for managing an npm installation.
 
     Note: The command is skipped if the `--skip-npm` flag is used.
@@ -246,6 +345,8 @@ def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build', f
         The source code directory.
     build_cmd: str, optional
         The npm command to build assets to the build_dir.
+    npm: str or list, optional.
+        The npm executable name, or a tuple of ['node', executable].
     """
 
     class NPM(BaseCommand):
@@ -255,23 +356,34 @@ def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build', f
             if skip_npm:
                 log.info('Skipping npm-installation')
                 return
-            node_package = path or here
+            node_package = path or HERE
             node_modules = pjoin(node_package, 'node_modules')
+            is_yarn = os.path.exists(pjoin(node_package, 'yarn.lock'))
 
-            if not which("npm"):
-                log.error("`npm` unavailable.  If you're running this command "
-                          "using sudo, make sure `npm` is availble to sudo")
+            npm_cmd = npm
+
+            if npm is None:
+                if is_yarn:
+                    npm_cmd = ['yarn']
+                else:
+                    npm_cmd = ['npm']
+
+            if not which(npm_cmd[0]):
+                log.error("`{0}` unavailable.  If you're running this command "
+                          "using sudo, make sure `{0}` is availble to sudo"
+                          .format(npm_cmd[0]))
                 return
+
             if force or is_stale(node_modules, pjoin(node_package, 'package.json')):
                 log.info('Installing build dependencies with npm.  This may '
                          'take a while...')
-                run(['npm', 'install'], cwd=node_package)
+                run(npm_cmd + ['install'], cwd=node_package)
             if build_dir and source_dir and not force:
                 should_build = is_stale(build_dir, source_dir)
             else:
                 should_build = True
             if should_build:
-                run(['npm', 'run', build_cmd], cwd=node_package)
+                run(npm_cmd + ['run', build_cmd], cwd=node_package)
 
     return NPM
 
@@ -384,12 +496,20 @@ def wrap_command(cmds, cls, strict=True):
     return WrappedCommand
 
 
-class bdist_egg_disabled(bdist_egg):
-    """Disabled version of bdist_egg
-    Prevents setup.py install performing setuptools' default easy_install,
-    which it should never ever do.
-    """
+def find_files(directory, pattern='*'):
+    """Find files in a directory matching a pattern, recursive.
 
-    def run(self):
-        sys.exit("Aborting implicit building of eggs. Use `pip install .` " +
-                 " to install from source.")
+    Adapted from https://stackoverflow.com/a/29270022.
+    """
+    if not os.path.exists(directory):
+        raise ValueError("Directory not found {}".format(directory))
+
+    matches = []
+    for root, dirnames, filenames in os.walk(directory):
+        if 'node_modules' in dirnames:
+            dirnames.remove('node_modules')
+        for filename in filenames:
+            full_path = os.path.join(root, filename)
+            if fnmatch.filter([full_path], pattern):
+                matches.append(pjoin(root, filename).replace(os.sep, '/'))
+    return matches
