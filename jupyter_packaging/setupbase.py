@@ -231,6 +231,7 @@ def combine_commands(*commands):
     """Return a Command that combines several commands."""
 
     class CombinedCommand(Command):
+        user_options = []
 
         def initialize_options(self):
             self.commands = []
