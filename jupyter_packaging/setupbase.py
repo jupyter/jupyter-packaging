@@ -467,10 +467,10 @@ def _wrap_command(cmds, cls, strict=True):
                         raise
                     else:
                         pass
-
-            result = cls.run(self)
             # update package data
             update_package_data(self.distribution)
+
+            result = cls.run(self)
             return result
     return WrappedCommand
 
