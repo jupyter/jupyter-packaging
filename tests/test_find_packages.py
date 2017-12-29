@@ -21,10 +21,13 @@ def test_finds_subpackages(tmpdir):
     sub_b2 = b.mkdir('sub2')
     for d in (a, sub_a1, sub_a2, b, sub_b1, sub_b2):
         d.join('__init__.py').write('')
-
-    expected = ['packageA', 'packageA.sub1', 'packageA.sub2',
-                'packageB', 'packageB.sub1', 'packageB.sub2']
-    assert expected == find_packages(str(tmpdir))
+    # using sets ensure order won't matter
+    expected = set([
+        'packageA', 'packageA.sub1', 'packageA.sub2',
+        'packageB', 'packageB.sub1', 'packageB.sub2'
+    ])
+    found = set(find_packages(str(tmpdir)))
+    assert expected == found
 
 
 def test_finds_only_direct_subpackages(tmpdir):
