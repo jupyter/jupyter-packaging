@@ -499,13 +499,13 @@ def _get_file_handler(package_data_spec, data_files_spec):
     return FileHandler
 
 
-def _get_data_files(data_specs, existing):
+def _get_data_files(data_specs, existing, top=HERE):
     """Expand data file specs into valid data files metadata.
 
     Parameters
     ----------
     data_specs: list of tuples
-        See [createcmdclass] for description.
+        See [create_cmdclass] for description.
     existing: list of tuples
         The existing distrubution data_files metadata.
 
@@ -524,7 +524,7 @@ def _get_data_files(data_specs, existing):
         dname = dname.replace(os.sep, '/')
         offset = len(dname) + 1
 
-        files = _get_files(pjoin(dname, pattern))
+        files = _get_files(pjoin(dname, pattern), top=top)
         for fname in files:
             # Normalize the path.
             root = os.path.dirname(fname)
