@@ -214,7 +214,9 @@ def run(cmd, **kwargs):
         cmd = shlex.split(cmd)
     cmd_path = which(cmd[0])
     if not cmd_path:
-        sys.exit("Aborting. Could not find path for cmd: %s" % cmd[0])
+        sys.exit("Aborting. Could not find cmd (%s) in path. "
+                 "If command is not expected to be in user's path, "
+                 "use an absolute path." % cmd[0])
     cmd[0] = cmd_path
     return subprocess.check_call(cmd, **kwargs)
 
