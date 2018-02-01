@@ -212,7 +212,10 @@ def run(cmd, **kwargs):
     kwargs.setdefault('shell', os.name == 'nt')
     if not isinstance(cmd, (list, tuple)) and os.name != 'nt':
         cmd = shlex.split(cmd)
-    cmd[0] = which(cmd[0])
+    cmd_path = which(cmd[0])
+    if not cmd_path:
+        sys.exit("Aborting. Could not find path for cmd: %s" % cmd[0])
+    cmd[0] = cmd_path
     return subprocess.check_call(cmd, **kwargs)
 
 
