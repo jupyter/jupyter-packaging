@@ -58,7 +58,7 @@ node_modules = pjoin(HERE, 'node_modules')
 
 SEPARATORS = os.sep if os.altsep is None else os.sep + os.altsep
 
-npm_path = ':'.join([
+npm_path = os.pathsep.join([
     pjoin(HERE, 'node_modules', '.bin'),
     os.environ.get('PATH', os.defpath),
 ])
