@@ -543,7 +543,6 @@ def _get_data_files(data_specs, existing, top=HERE):
             # Normalize the path.
             root = os.path.dirname(fname)
             full_path = _glob_pjoin(path, root[offset:])
-            print(dname, root, full_path, offset)
             if full_path.endswith('/'):
                 full_path = full_path[:-1]
             file_data[full_path].append(fname)
@@ -591,7 +590,7 @@ def _get_files(file_patterns, top=HERE):
                 fn = os.path.relpath(_glob_pjoin(root, filename), top)
                 fn = fn.replace(os.sep, '/')
                 if m(fn):
-                    files.add(fn.replace(os.sep, '/'))
+                    files.add(fn)
 
     return list(files)
 
