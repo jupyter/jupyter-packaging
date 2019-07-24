@@ -136,7 +136,7 @@ class bdist_egg_disabled(bdist_egg):
 
 
 def create_cmdclass(prerelease_cmd=None, package_data_spec=None,
-        data_files_spec=None):
+                    data_files_spec=None):
     """Create a command class with the given optional prerelease class.
 
     Parameters
@@ -318,7 +318,8 @@ def mtime(path):
     return os.stat(path).st_mtime
 
 
-def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build', force=False, npm=None):
+def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build',
+                force=False, npm=None):
     """Return a Command for managing an npm installation.
 
     Note: The command is skipped if the `--skip-npm` flag is used.
@@ -359,7 +360,7 @@ def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build', f
 
             if not which(npm_cmd[0]):
                 log.error("`{0}` unavailable.  If you're running this command "
-                          "using sudo, make sure `{0}` is availble to sudo"
+                          "using sudo, make sure `{0}` is available to sudo"
                           .format(npm_cmd[0]))
                 return
 
@@ -464,7 +465,7 @@ def _wrap_command(cmds, cls, strict=True):
     cmds: list(str)
         The names of the other commands to run prior to the command.
     strict: boolean, optional
-        Wether to raise errors when a pre-command fails.
+        Whether to raise errors when a pre-command fails.
     """
     class WrappedCommand(cls):
 
@@ -519,7 +520,7 @@ def _get_data_files(data_specs, existing, top=HERE):
     data_specs: list of tuples
         See [create_cmdclass] for description.
     existing: list of tuples
-        The existing distrubution data_files metadata.
+        The existing distribution data_files metadata.
 
     Returns
     -------
