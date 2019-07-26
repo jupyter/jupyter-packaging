@@ -12,7 +12,7 @@ from jupyter_packaging.setupbase import (
 )
 
 
-here = os.path.dirname(__file__)
+here = os.path.dirname(os.path.abspath(__file__))
 
 
 setup_args = dict(
