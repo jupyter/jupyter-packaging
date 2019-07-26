@@ -52,16 +52,7 @@ __version__ = '0.3.0'
 # Top Level Variables
 # ---------------------------------------------------------------------------
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-is_repo = os.path.exists(pjoin(HERE, '.git'))
-node_modules = pjoin(HERE, 'node_modules')
-
 SEPARATORS = os.sep if os.altsep is None else os.sep + os.altsep
-
-npm_path = os.pathsep.join([
-    pjoin(HERE, 'node_modules', '.bin'),
-    os.environ.get('PATH', os.defpath),
-])
 
 if "--skip-npm" in sys.argv:
     print("Skipping npm install as requested.")
@@ -104,7 +95,7 @@ def ensure_python(specs):
     raise ValueError('Python version %s unsupported' % part)
 
 
-def find_packages(top=HERE):
+def find_packages(top):
     """
     Find all of the packages.
     """
@@ -178,6 +169,8 @@ def create_cmdclass(prerelease_cmd=None, package_data_spec=None,
     else:
         egg = bdist_egg_disabled
 
+    is_repo = os.path.exists('.git')
+
     cmdclass = dict(
         build_py=wrapper(build_py, strict=is_repo),
         bdist_egg=egg,
@@ -205,9 +198,8 @@ def command_for_func(func):
 
 
 def run(cmd, **kwargs):
-    """Echo a command before running it.  Defaults to repo as cwd"""
+    """Echo a command before running it."""
     log.info('> ' + list2cmdline(cmd))
-    kwargs.setdefault('cwd', HERE)
     kwargs.setdefault('shell', os.name == 'nt')
     if not isinstance(cmd, (list, tuple)) and os.name != 'nt':
         cmd = shlex.split(cmd)
@@ -326,7 +318,7 @@ def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build',
     Parameters
     ----------
     path: str, optional
-        The base path of the node package.  Defaults to the repo root.
+        The base path of the node package. Defaults to the current directory.
     build_dir: str, optional
         The target build directory.  If this and source_dir are given,
         the JavaScript will only be build if necessary.
@@ -345,7 +337,7 @@ def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build',
             if skip_npm:
                 log.info('Skipping npm-installation')
                 return
-            node_package = path or HERE
+            node_package = path or os.path.abspath(os.getcwd())
             node_modules = pjoin(node_package, 'node_modules')
             is_yarn = os.path.exists(pjoin(node_package, 'yarn.lock'))
 
@@ -511,7 +503,7 @@ def _glob_pjoin(*parts):
     return pjoin(*parts).replace(os.sep, '/')
 
 
-def _get_data_files(data_specs, existing, top=HERE):
+def _get_data_files(data_specs, existing, top=None):
     """Expand data file specs into valid data files metadata.
 
     Parameters
@@ -525,6 +517,8 @@ def _get_data_files(data_specs, existing, top=HERE):
     -------
     A valid list of data_files items.
     """
+    if top is None:
+        top = os.path.abspath(os.getcwd())
     # Extract the existing data files into a staging object.
     file_data = defaultdict(list)
     for (path, files) in existing or []:
@@ -553,7 +547,7 @@ def _get_data_files(data_specs, existing, top=HERE):
     return data_files
 
 
-def _get_files(file_patterns, top=HERE):
+def _get_files(file_patterns, top=None):
     """Expand file patterns to a list of paths.
 
     Parameters
@@ -569,6 +563,8 @@ def _get_files(file_patterns, top=HERE):
     Note:
     Files in `node_modules` are ignored.
     """
+    if top is None:
+        top = os.path.abspath(os.getcwd())
     if not isinstance(file_patterns, (list, tuple)):
         file_patterns = [file_patterns]
 
@@ -600,7 +596,7 @@ def _get_package_data(root, file_patterns=None):
     Parameters
     -----------
     root: str
-        The relative path to the package root from `HERE`.
+        The relative path to the package root from the current dir.
     file_patterns: list or str, optional
         A list of glob patterns for the data file locations.
         The globs can be recursive if they include a `**`.
@@ -612,7 +608,7 @@ def _get_package_data(root, file_patterns=None):
     """
     if file_patterns is None:
         file_patterns = ['*']
-    return _get_files(file_patterns, _glob_pjoin(HERE, root))
+    return _get_files(file_patterns, _glob_pjoin(os.path.abspath(os.getcwd()), root))
 
 
 def _compile_pattern(pat, ignore_case=True):
