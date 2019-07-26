@@ -108,14 +108,13 @@ def find_packages(top=HERE):
     """
     Find all of the packages.
     """
-    packages = []
-    for d, dirs, _ in os.walk(top, followlinks=True):
-        if os.path.exists(pjoin(d, '__init__.py')):
-            packages.append(os.path.relpath(d, top).replace(os.path.sep, '.'))
-        elif d != top:
-            # Do not look for packages in subfolders if current is not a package
-            dirs[:] = []
-    return packages
+    import warnings
+    warnings.warn(
+        'Deprecated, please use setuptools.find_packages',
+        category=DeprecationWarning
+    )
+    from setuptools import find_packages as fp
+    return fp(top)
 
 
 def update_package_data(distribution):
@@ -652,7 +651,7 @@ def _translate_glob(pat):
         translated_parts.append(_translate_glob_part(part))
     os_sep_class = '[%s]' % re.escape(SEPARATORS)
     res = _join_translated(translated_parts, os_sep_class)
-    return '{res}\\Z(?ms)'.format(res=res)
+    return '(?ms){res}\\Z'.format(res=res)
 
 
 def _join_translated(translated_parts, os_sep_class):
