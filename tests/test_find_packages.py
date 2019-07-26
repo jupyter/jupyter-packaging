@@ -1,6 +1,8 @@
 
 import os
 
+import pytest
+
 from jupyter_packaging.setupbase import find_packages
 
 
@@ -9,7 +11,8 @@ root = os.path.join(here, os.pardir)
 
 
 def test_finds_itself():
-    assert ['jupyter_packaging'] == find_packages(root)
+    with pytest.warns(DeprecationWarning):
+        assert ['jupyter_packaging'] == find_packages(root)
 
 
 def test_finds_subpackages(tmpdir):
@@ -26,7 +29,8 @@ def test_finds_subpackages(tmpdir):
         'packageA', 'packageA.sub1', 'packageA.sub2',
         'packageB', 'packageB.sub1', 'packageB.sub2'
     ])
-    found = set(find_packages(str(tmpdir)))
+    with pytest.warns(DeprecationWarning):
+        found = set(find_packages(str(tmpdir)))
     assert expected == found
 
 
@@ -39,4 +43,5 @@ def test_finds_only_direct_subpackages(tmpdir):
         d.join('__init__.py').write('')
 
     expected = []
-    assert expected == find_packages(str(tmpdir))
+    with pytest.warns(DeprecationWarning):
+        assert expected == find_packages(str(tmpdir))
