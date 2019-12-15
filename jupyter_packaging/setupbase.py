@@ -174,6 +174,7 @@ def create_cmdclass(prerelease_cmd=None, package_data_spec=None,
     cmdclass = dict(
         build_py=wrapper(build_py, strict=is_repo),
         bdist_egg=egg,
+        develop=develop,
         sdist=wrapper(sdist, strict=True),
         handle_files=handle_files,
     )
@@ -181,7 +182,6 @@ def create_cmdclass(prerelease_cmd=None, package_data_spec=None,
     if bdist_wheel:
         cmdclass['bdist_wheel'] = wrapper(bdist_wheel, strict=True)
 
-    cmdclass['develop'] = wrapper(develop, strict=True)
     return cmdclass
 
 
