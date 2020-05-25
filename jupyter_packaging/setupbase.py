@@ -547,11 +547,11 @@ def _get_data_files(data_specs, existing, top=None):
     for (path, dname, pattern) in data_specs or []:
         if os.path.isabs(dname):
             dname = os.path.relpath(dname, top)
-        print("****ho", dname, pattern)
+
         dname = dname.replace(os.sep, '/')
         offset = 0 if dname in ('.', '') else len(dname) + 1
         files = _get_files(_glob_pjoin(dname, pattern), top=top)
-        print("***files", files)
+
         for fname in files:
             # Normalize the path.
             root = os.path.dirname(fname)
