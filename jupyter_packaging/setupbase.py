@@ -161,8 +161,10 @@ def create_cmdclass(prerelease_cmd=None, package_data_spec=None,
     wrapped = [prerelease_cmd] if prerelease_cmd else []
     if package_data_spec or data_files_spec:
         wrapped.append('handle_files')
+
     wrapper = functools.partial(_wrap_command, wrapped)
     handle_files = _get_file_handler(package_data_spec, data_files_spec)
+    develop_handler = _get_develop_handler()
 
     if 'bdist_egg' in sys.argv:
         egg = wrapper(bdist_egg, strict=True)
@@ -181,14 +183,14 @@ def create_cmdclass(prerelease_cmd=None, package_data_spec=None,
     if bdist_wheel:
         cmdclass['bdist_wheel'] = wrapper(bdist_wheel, strict=True)
 
-    cmdclass['develop'] = wrapper(develop, strict=True)
+    cmdclass['develop'] = wrapper(develop_handler, strict=True)
     return cmdclass
 
 
 def command_for_func(func):
     """Create a command that calls the given function."""
 
-    class FuncCommand(BaseCommand):
+    class FuncfCommand(BaseCommand):
 
         def run(self):
             func()
@@ -496,6 +498,22 @@ def _get_file_handler(package_data_spec, data_files_spec):
     return FileHandler
 
 
+def _get_develop_handler():
+    """Get a handler for the develop command"""
+    class _develop(develop):
+
+        def install_for_development(self):
+            super(_develop, self).install_for_development()
+            self.run_command('handle_files')
+            for _, filenames in self.distribution.data_files:
+                for filename in filenames:
+                    target = os.path.join(sys.prefix, filename)
+                    self.mkpath(os.path.dirname(target))
+                    outf, copied = self.copy_file(filename, target)
+
+    return _develop
+
+
 def _glob_pjoin(*parts):
     """Join paths for glob processing"""
     if parts[0] in ('.', ''):
@@ -529,9 +547,11 @@ def _get_data_files(data_specs, existing, top=None):
     for (path, dname, pattern) in data_specs or []:
         if os.path.isabs(dname):
             dname = os.path.relpath(dname, top)
+        print("****ho", dname, pattern)
         dname = dname.replace(os.sep, '/')
         offset = 0 if dname in ('.', '') else len(dname) + 1
         files = _get_files(_glob_pjoin(dname, pattern), top=top)
+        print("***files", files)
         for fname in files:
             # Normalize the path.
             root = os.path.dirname(fname)
