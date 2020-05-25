@@ -190,7 +190,7 @@ def create_cmdclass(prerelease_cmd=None, package_data_spec=None,
 def command_for_func(func):
     """Create a command that calls the given function."""
 
-    class FuncfCommand(BaseCommand):
+    class FuncCommand(BaseCommand):
 
         def run(self):
             func()
