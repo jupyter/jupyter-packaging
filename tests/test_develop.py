@@ -12,8 +12,8 @@ def test_develop(package_dir):
     share = osp.join(sys.prefix, 'share', 'jupyter', name)
     if osp.exists(share):
         shutil.rmtree(share)
-    subprocess.check_output([shutil.which('pip'), 'install', '-e', '.'], cwd=package_dir)
+    subprocess.check_output([shutil.which('pip'), 'install', '-e', '.'], cwd=str(package_dir))
     assert osp.exists(osp.join(share, 'test.txt'))
-    subprocess.check_output([shutil.which('pip'), 'uninstall', '-y', name], cwd=package_dir)
+    subprocess.check_output([shutil.which('pip'), 'uninstall', '-y', name], cwd=str(package_dir))
     assert osp.exists(osp.join(share, 'test.txt'))
     shutil.rmtree(share)
