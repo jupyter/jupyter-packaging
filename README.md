@@ -8,13 +8,24 @@ Tools to help build and install Jupyter Python packages
 
 ## Usage
 
-Below is an example `setup.py` that uses jupyter-packaging.  The 
-contents of `jupyter_packaging.py` are copied locally to `setupbase.py`
-so they are available to run the `setup.py` script itself.
+There are two ways to use `jupyter-packaging` in another package.
+
+The first to use a `pyproject.toml` file as outlined in [pep-518](https://www.python.org/dev/peps/pep-0518/).
+An example:
+
+```
+[build-system]
+requires = ["jupyter_packaging~=0.4.0", "jupyterlab~=2.0", "setuptools>=40.8.0", "wheel"]
+build-backend = "setuptools.build_meta"
+```
+
+The second method is to vendor `setupbase.py` locally alongside `setup.py` and import the helpers from `setupbase`.
+
+Below is an example `setup.py` that uses the `pyproject.toml` approach:
 
 ```py
 from setuptools import setup
-from setupbase import create_cmdclass, install_npm
+from jupyter_packaging import create_cmdclass, install_npm
 
 
 cmdclass = create_cmdclass(['js'])
