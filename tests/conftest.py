@@ -32,3 +32,54 @@ def destination_dir(tmpdir):
     for p in destination.visit():
         p.setmtime(20000)
     return destination
+
+
+@fixture
+def package_dir(tmpdir):
+    pkg = tmpdir.mkdir('package')
+    share = pkg.mkdir('share')
+    jupyter = share.mkdir('jupyter')
+    foo = jupyter.mkdir('jupyter_packaging_test_foo')
+    foo.join('test.txt').write('hello, world!')
+    pkg.join('jupyter_packaging_test_foo.py').write('print("hello, world!")')
+    pkg.join('MANIFEST.in').write('recursive-include share *.*')
+    pkg.join('setup.py').write("""
+from jupyter_packaging import create_cmdclass
+import setuptools
+import os
+
+
+name = "jupyter_packaging_test_foo"
+HERE = os.path.abspath(os.path.dirname(__file__))
+share_path = os.path.join(HERE, "share", "jupyter", name)
+
+data_files_spec = [
+    ("share/jupyter/%s" % name, share_path,  "*.txt"),
+]
+
+
+cmdclass = create_cmdclass( 
+    data_files_spec=data_files_spec
+)
+    
+setup_args = dict(
+    name=name,
+    version="foo version",
+    url="foo url",
+    author="foo author",
+    description="foo package",
+    long_description="long_description",
+    long_description_content_type="text/markdown",
+    cmdclass= cmdclass,
+    packages=setuptools.find_packages(),
+    zip_safe=False,
+    py_modules=["jupyter_packaging_test_foo"],
+    include_package_data=True
+)
+
+
+if __name__ == "__main__":
+    setuptools.setup(**setup_args)
+""")
+    return pkg
+
