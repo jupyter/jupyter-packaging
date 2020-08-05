@@ -53,7 +53,7 @@ def package_dir(tmpdir, setupbase):
     foo.join('test.txt').write('hello, world!')
     pkg.join('jupyter_packaging_test_foo.py').write('print("hello, world!")')
     pkg.join('MANIFEST.in').write('recursive-include share *.*')
-    shutil.copy(setupbase, pkg)
+    shutil.copy(str(setupbase), str(pkg))
     pkg.join('setup.py').write("""
 from setupbase import create_cmdclass
 import setuptools
@@ -106,7 +106,7 @@ def nested_package_dir(tmpdir, setupbase):
     mod.join('__init__.py').write('')
     mod.join('main.py').write('print("hello, world!")')
     pkg.join('MANIFEST.in').write('recursive-include share *.*')
-    shutil.copy(setupbase, pkg)
+    shutil.copy(str(setupbase), str(pkg))
     pkg.join('setup.py').write("""
 from setupbase import create_cmdclass
 import setuptools
