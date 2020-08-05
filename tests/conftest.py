@@ -1,4 +1,14 @@
+import os
+import shutil
+import pathlib
 from pytest import fixture
+
+HERE = pathlib.Path(__file__).resolve()
+
+
+@fixture
+def setupbase():
+    return HERE.joinpath("../../jupyter_packaging/setupbase.py").resolve()
 
 
 @fixture
@@ -35,7 +45,7 @@ def destination_dir(tmpdir):
 
 
 @fixture
-def package_dir(tmpdir):
+def package_dir(tmpdir, setupbase):
     pkg = tmpdir.mkdir('package')
     share = pkg.mkdir('share')
     jupyter = share.mkdir('jupyter')
@@ -43,8 +53,9 @@ def package_dir(tmpdir):
     foo.join('test.txt').write('hello, world!')
     pkg.join('jupyter_packaging_test_foo.py').write('print("hello, world!")')
     pkg.join('MANIFEST.in').write('recursive-include share *.*')
+    shutil.copy(setupbase, pkg)
     pkg.join('setup.py').write("""
-from jupyter_packaging import create_cmdclass
+from setupbase import create_cmdclass
 import setuptools
 import os
 
@@ -58,10 +69,10 @@ data_files_spec = [
 ]
 
 
-cmdclass = create_cmdclass( 
+cmdclass = create_cmdclass(
     data_files_spec=data_files_spec
 )
-    
+
 setup_args = dict(
     name=name,
     version="foo version",
@@ -74,6 +85,58 @@ setup_args = dict(
     packages=setuptools.find_packages(),
     zip_safe=False,
     py_modules=["jupyter_packaging_test_foo"],
+    include_package_data=True
+)
+
+
+if __name__ == "__main__":
+    setuptools.setup(**setup_args)
+""")
+    return pkg
+
+
+@fixture
+def nested_package_dir(tmpdir, setupbase):
+    pkg = tmpdir.mkdir('package')
+    share = pkg.mkdir('share')
+    jupyter = share.mkdir('jupyter')
+    foo = jupyter.mkdir('jupyter_packaging_test_foo')
+    foo.join('test.txt').write('hello, world!')
+    mod = pkg.mkdir('jupyter_packaging_test_foo')
+    mod.join('__init__.py').write('')
+    mod.join('main.py').write('print("hello, world!")')
+    pkg.join('MANIFEST.in').write('recursive-include share *.*')
+    shutil.copy(setupbase, pkg)
+    pkg.join('setup.py').write("""
+from setupbase import create_cmdclass
+import setuptools
+import os
+
+
+name = "jupyter_packaging_test_foo"
+HERE = os.path.abspath(os.path.dirname(__file__))
+share_path = os.path.join(HERE, "share", "jupyter", name)
+
+data_files_spec = [
+    ("share/jupyter/%s" % name, share_path,  "*.txt"),
+]
+
+
+cmdclass = create_cmdclass(
+    data_files_spec=data_files_spec
+)
+
+setup_args = dict(
+    name=name,
+    version="0.1",
+    url="foo url",
+    author="foo author",
+    description="foo package",
+    long_description="long_description",
+    long_description_content_type="text/markdown",
+    cmdclass= cmdclass,
+    packages=setuptools.find_packages("."),
+    zip_safe=False,
     include_package_data=True
 )
 
