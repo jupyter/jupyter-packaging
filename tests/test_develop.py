@@ -7,6 +7,7 @@ import pathlib
 import sys
 
 
+# Relative paths of datafiles within the mock Python packages.
 data_files_source = [
     ("share/test.txt",),
     ("share/test.txt",),
