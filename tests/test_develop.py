@@ -8,9 +8,9 @@ import sys
 
 
 data_files_specs = [
-    # ("jupyter-packaging-test", "share", "test.txt"),
-    # ("jupyter-packaging-test/level1", "share", "test.txt"),
-    # ("jupyter-packaging-test", "level1/test", "test.txt"),
+    ("jupyter-packaging-test", "share", "test.txt"),
+    ("jupyter-packaging-test/level1", "share", "test.txt"),
+    ("jupyter-packaging-test", "level1/test", "test.txt"),
     ("jupyter-packaging-test/level1/level2", "level1/test", "test.txt")
 ]
 
