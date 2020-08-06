@@ -57,6 +57,7 @@ def make_package(tmp_path, setupbase):
     """
     def stuff(
         name="jupyter_packaging_test_foo",
+        data_files=None,
         data_files_spec=None,
         py_module=False
     ):
@@ -81,6 +82,7 @@ def make_package(tmp_path, setupbase):
         # Fill the package with content.
         # 1. Add a setup.py
         setuppy = pkg.joinpath("setup.py")
+        # Pass the data_file spec to the setup.py
         setup_content = setup(
             name=name,
             data_files_spec=data_files_spec,
@@ -90,11 +92,12 @@ def make_package(tmp_path, setupbase):
         # 2. Add setupbase to package.
         shutil.copy(str(setupbase), str(pkg))
         # 3. Add datafiles content.
-        if data_files_spec:
-            for file_spec in data_files_spec:
-                data_dir = pkg.joinpath(file_spec[1])
-                data_dir.mkdir(parents=True)
-                data_dir.joinpath(file_spec[2]).write_text("hello, world!")
+        if data_files:
+            for datafile_path in data_files:
+                data_file = pkg.joinpath(datafile_path)
+                data_dir = data_file.parent
+                data_dir.mkdir(parents=True, exist_ok=True)
+                data_file.write_text("hello, world!")
         return pkg
 
     return stuff

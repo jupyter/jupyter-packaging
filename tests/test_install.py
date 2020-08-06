@@ -1,14 +1,8 @@
-import importlib
-import os
-import os.path as osp
 import subprocess
 import shutil
-import sys
-import tarfile
-import glob
-import site
 import pathlib
 import sysconfig
+
 
 def test_install(make_package, tmp_path):
     name = 'jupyter_packaging_test_foo'
