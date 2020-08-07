@@ -1,4 +1,106 @@
+import os
+import shutil
+import pathlib
 from pytest import fixture
+
+HERE = pathlib.Path(__file__).resolve()
+
+
+@fixture
+def setupbase():
+    """A fixture that enables other fixtures to build mock packages
+    with the main setupbase from this package.
+    """
+    return HERE.joinpath("../../jupyter_packaging/setupbase.py").resolve()
+
+
+setup = lambda name="jupyter_packaging_test_foo", data_files_spec=None, **kwargs: """
+from setupbase import create_cmdclass
+import setuptools
+import os
+
+
+name = "{name}"
+
+cmdclass = create_cmdclass(
+    data_files_spec={data_files_spec}
+)
+
+setup_args = dict(
+    name=name,
+    version="0.1",
+    url="foo url",
+    author="foo author",
+    description="foo package",
+    long_description="long_description",
+    long_description_content_type="text/markdown",
+    cmdclass= cmdclass,
+    zip_safe=False,
+    include_package_data=True,
+    {setup_args}
+)
+
+
+if __name__ == "__main__":
+    setuptools.setup(**setup_args)
+""".format(
+    name=name,
+    data_files_spec=data_files_spec,
+    setup_args="".join(['{}={},\n\t'.format(key, str(val)) for key, val in kwargs.items()])
+)
+
+
+@fixture
+def make_package(tmp_path, setupbase):
+    """A callable fixture that creates a mock python package
+    in tmp_path and returns the package directory
+    """
+    def stuff(
+        name="jupyter_packaging_test_foo",
+        data_files=None,
+        data_files_spec=None,
+        py_module=False
+    ):
+        # Create the package directory.
+        pkg = tmp_path.joinpath('package')
+        pkg.mkdir()
+
+        # What type of a package is this, single module or nested package?
+        setup_args = {}
+        if py_module:
+            setup_args.update({"py_module": ["jupyter_packaging_test_foo"]})
+            pkg.joinpath('jupyter_packaging_test_foo.py').write_text('print("hello, world!")')
+            pkg.joinpath('MANIFEST.in').write_text('recursive-include share *.*')
+        else:
+            setup_args.update({"packages": "setuptools.find_packages('.')"})
+            mod = pkg.joinpath('jupyter_packaging_test_foo')
+            mod.mkdir()
+            mod.joinpath('__init__.py').write_text('')
+            mod.joinpath('main.py').write_text('print("hello, world!")')
+            pkg.joinpath('MANIFEST.in').write_text('recursive-include share *.*')
+
+        # Fill the package with content.
+        # 1. Add a setup.py
+        setuppy = pkg.joinpath("setup.py")
+        # Pass the data_file spec to the setup.py
+        setup_content = setup(
+            name=name,
+            data_files_spec=data_files_spec,
+            **setup_args
+        )
+        setuppy.write_text(setup_content)
+        # 2. Add setupbase to package.
+        shutil.copy(str(setupbase), str(pkg))
+        # 3. Add datafiles content.
+        if data_files:
+            for datafile_path in data_files:
+                data_file = pkg.joinpath(datafile_path)
+                data_dir = data_file.parent
+                data_dir.mkdir(parents=True, exist_ok=True)
+                data_file.write_text("hello, world!")
+        return pkg
+
+    return stuff
 
 
 @fixture
@@ -32,54 +134,3 @@ def destination_dir(tmpdir):
     for p in destination.visit():
         p.setmtime(20000)
     return destination
-
-
-@fixture
-def package_dir(tmpdir):
-    pkg = tmpdir.mkdir('package')
-    share = pkg.mkdir('share')
-    jupyter = share.mkdir('jupyter')
-    foo = jupyter.mkdir('jupyter_packaging_test_foo')
-    foo.join('test.txt').write('hello, world!')
-    pkg.join('jupyter_packaging_test_foo.py').write('print("hello, world!")')
-    pkg.join('MANIFEST.in').write('recursive-include share *.*')
-    pkg.join('setup.py').write("""
-from jupyter_packaging import create_cmdclass
-import setuptools
-import os
-
-
-name = "jupyter_packaging_test_foo"
-HERE = os.path.abspath(os.path.dirname(__file__))
-share_path = os.path.join(HERE, "share", "jupyter", name)
-
-data_files_spec = [
-    ("share/jupyter/%s" % name, share_path,  "*.txt"),
-]
-
-
-cmdclass = create_cmdclass( 
-    data_files_spec=data_files_spec
-)
-    
-setup_args = dict(
-    name=name,
-    version="foo version",
-    url="foo url",
-    author="foo author",
-    description="foo package",
-    long_description="long_description",
-    long_description_content_type="text/markdown",
-    cmdclass= cmdclass,
-    packages=setuptools.find_packages(),
-    zip_safe=False,
-    py_modules=["jupyter_packaging_test_foo"],
-    include_package_data=True
-)
-
-
-if __name__ == "__main__":
-    setuptools.setup(**setup_args)
-""")
-    return pkg
-

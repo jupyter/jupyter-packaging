@@ -505,11 +505,12 @@ def _get_develop_handler():
         def install_for_development(self):
             super(_develop, self).install_for_development()
             self.run_command('handle_files')
-            for _, filenames in self.distribution.data_files:
-                for filename in filenames:
-                    target = os.path.join(sys.prefix, filename)
+            for target_dir, filepaths in self.distribution.data_files:
+                for filepath in filepaths:
+                    filename = os.path.basename(filepath)
+                    target = os.path.join(sys.prefix, target_dir, filename)
                     self.mkpath(os.path.dirname(target))
-                    outf, copied = self.copy_file(filename, target)
+                    outf, copied = self.copy_file(filepath, target)
 
     return _develop
 
