@@ -505,7 +505,7 @@ def _get_file_handler(package_data_spec, data_files_spec, exclude=None):
                 package_data[key] =files
 
             self.distribution.data_files = _get_data_files(
-                data_files_spec, self.distribution.data_files, exclude
+                data_files_spec, self.distribution.data_files, exclude=exclude
             )
 
     return FileHandler
@@ -535,7 +535,7 @@ def _glob_pjoin(*parts):
     return pjoin(*parts).replace(os.sep, '/')
 
 
-def _get_data_files(data_specs, existing, top=None, exclude=None):
+def _get_data_files(data_specs, existing, *, top=None, exclude=None):
     """Expand data file specs into valid data files metadata.
 
     Parameters
@@ -544,6 +544,10 @@ def _get_data_files(data_specs, existing, top=None, exclude=None):
         See [create_cmdclass] for description.
     existing: list of tuples
         The existing distribution data_files metadata.
+    top: str, optional
+        The top directory
+    exclude: func, optional
+        Function used to test whether to exclude a file
 
     Returns
     -------
