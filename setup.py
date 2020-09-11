@@ -30,6 +30,7 @@ setup_args = dict(
     keywords        = ['Jupyter', 'Packaging'],
     cmdclass        = create_cmdclass(),
     python_requires = '>=3.6',
+    install_requires = "packaging",
     extras_require  = {
         'test': [
             'pytest'
