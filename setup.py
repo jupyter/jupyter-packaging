@@ -11,9 +11,7 @@ from jupyter_packaging.setupbase import (
     create_cmdclass, find_packages, __version__
 )
 
-
 here = os.path.dirname(os.path.abspath(__file__))
-
 
 setup_args = dict(
     name            = 'jupyter-packaging',
@@ -31,6 +29,12 @@ setup_args = dict(
     platforms       = "Linux, Mac OS X, Windows",
     keywords        = ['Jupyter', 'Packaging'],
     cmdclass        = create_cmdclass(),
+    python_requires = '>=3.6',
+    extras_require  = {
+        'test': [
+            'pytest'
+        ],
+    },
     classifiers     = [
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
@@ -38,10 +42,9 @@ setup_args = dict(
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
 )
 

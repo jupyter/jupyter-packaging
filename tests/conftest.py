@@ -7,15 +7,20 @@ HERE = pathlib.Path(__file__).resolve()
 
 
 @fixture
-def setupbase():
+def pyproject_toml():
     """A fixture that enables other fixtures to build mock packages
-    with the main setupbase from this package.
+    with that depend on this package.
     """
-    return HERE.joinpath("../../jupyter_packaging/setupbase.py").resolve()
+    root_path = HERE.joinpath("../..").resolve()
+    return """
+[build-system]
+requires = ["jupyter_packaging@file://%s", "setuptools>=40.8.0", "wheel"]
+build-backend = "setuptools.build_meta"
+""" % root_path
 
 
 setup = lambda name="jupyter_packaging_test_foo", data_files_spec=None, **kwargs: """
-from setupbase import create_cmdclass
+from jupyter_packaging import create_cmdclass
 import setuptools
 import os
 
@@ -51,7 +56,7 @@ if __name__ == "__main__":
 
 
 @fixture
-def make_package(tmp_path, setupbase):
+def make_package(tmp_path, pyproject_toml):
     """A callable fixture that creates a mock python package
     in tmp_path and returns the package directory
     """
@@ -89,8 +94,11 @@ def make_package(tmp_path, setupbase):
             **setup_args
         )
         setuppy.write_text(setup_content)
-        # 2. Add setupbase to package.
-        shutil.copy(str(setupbase), str(pkg))
+
+        # 2. Add pyproject.toml to package.
+        with open(pkg.joinpath('pyproject.toml'), 'w') as fid:
+            fid.write(pyproject_toml)
+
         # 3. Add datafiles content.
         if data_files:
             for datafile_path in data_files:

@@ -1,12 +1,12 @@
 language: python
 python:
-    - 3.5
+    - 3.6
+    - 3.7
     - 3.8
 sudo: false
 env:
 install:
-    - pip install pytest
-    - pip install .
+    - pip install .[test]
 script:
     - python setup.py --version
     - python setup.py build_py
