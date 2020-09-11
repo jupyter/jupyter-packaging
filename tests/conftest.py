@@ -29,7 +29,7 @@ name = "{name}"
 
 
 def exclude(filename):
-    return os.path.basename(filename) == "exclude.py":
+    return os.path.basename(filename) == "exclude.py"
 
 cmdclass = create_cmdclass(
     data_files_spec={data_files_spec},
