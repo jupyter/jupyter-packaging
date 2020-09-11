@@ -133,7 +133,7 @@ class bdist_egg_disabled(bdist_egg):
 
 
 def create_cmdclass(prerelease_cmd=None, package_data_spec=None,
-                    data_files_spec=None):
+                    data_files_spec=None, exclude=None):
     """Create a command class with the given optional prerelease class.
 
     Parameters
@@ -147,6 +147,9 @@ def create_cmdclass(prerelease_cmd=None, package_data_spec=None,
         A list of (path, dname, pattern) tuples where the path is the
         `data_files` install path, dname is the source directory, and the
         pattern is a glob pattern.
+    exclude: function
+        A function which takes a string filename and returns True if the
+        file should be excluded from package data and data files, False otherwise.
 
     Notes
     -----
@@ -170,7 +173,7 @@ def create_cmdclass(prerelease_cmd=None, package_data_spec=None,
         wrapped.append('handle_files')
 
     wrapper = functools.partial(_wrap_command, wrapped)
-    handle_files = _get_file_handler(package_data_spec, data_files_spec)
+    handle_files = _get_file_handler(package_data_spec, data_files_spec, exclude)
     develop_handler = _get_develop_handler()
 
     if 'bdist_egg' in sys.argv:
@@ -486,7 +489,7 @@ def _wrap_command(cmds, cls, strict=True):
     return WrappedCommand
 
 
-def _get_file_handler(package_data_spec, data_files_spec):
+def _get_file_handler(package_data_spec, data_files_spec, exclude=None):
     """Get a package_data and data_files handler command.
     """
     class FileHandler(BaseCommand):
@@ -496,10 +499,13 @@ def _get_file_handler(package_data_spec, data_files_spec):
             package_spec = package_data_spec or dict()
 
             for (key, patterns) in package_spec.items():
-                package_data[key] = _get_package_data(key, patterns)
+                files =  _get_package_data(key, patterns)
+                if exclude is not None:
+                    files = [f for f in files if not exclude(f)]
+                package_data[key] =files
 
             self.distribution.data_files = _get_data_files(
-                data_files_spec, self.distribution.data_files
+                data_files_spec, self.distribution.data_files, exclude
             )
 
     return FileHandler
@@ -529,7 +535,7 @@ def _glob_pjoin(*parts):
     return pjoin(*parts).replace(os.sep, '/')
 
 
-def _get_data_files(data_specs, existing, top=None):
+def _get_data_files(data_specs, existing, top=None, exclude=None):
     """Expand data file specs into valid data files metadata.
 
     Parameters
@@ -566,6 +572,8 @@ def _get_data_files(data_specs, existing, top=None):
             full_path = _glob_pjoin(path, root[offset:])
             if full_path.endswith('/'):
                 full_path = full_path[:-1]
+            if exclude is not None and exclude(fname):
+                continue
             file_data[full_path].append(fname)
 
     # Construct the data files spec.

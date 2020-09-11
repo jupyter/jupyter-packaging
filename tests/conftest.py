@@ -27,8 +27,13 @@ import os
 
 name = "{name}"
 
+
+def exclude(filename):
+    return os.path.basename(filename) == "exclude.py":
+
 cmdclass = create_cmdclass(
-    data_files_spec={data_files_spec}
+    data_files_spec={data_files_spec},
+    exclude=exclude
 )
 
 setup_args = dict(
@@ -82,6 +87,8 @@ def make_package(tmp_path, pyproject_toml):
             mod.mkdir()
             mod.joinpath('__init__.py').write_text('')
             mod.joinpath('main.py').write_text('print("hello, world!")')
+            # path that is meant to be excluded
+            mod.joinpath("exclude.py")
             pkg.joinpath('MANIFEST.in').write_text('recursive-include share *.*')
 
         # Fill the package with content.
