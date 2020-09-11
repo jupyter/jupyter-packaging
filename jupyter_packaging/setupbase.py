@@ -29,6 +29,8 @@ if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 from setuptools import Command
 from setuptools.command.build_py import build_py
 from setuptools.command.sdist import sdist
+
+# Note: distutils must be imported after setuptools
 from distutils import log
 
 from setuptools.command.develop import develop
@@ -80,6 +82,11 @@ def get_version(file, name='__version__'):
 def ensure_python(specs):
     """Given a list of range specifiers for python, ensure compatibility.
     """
+    import warnings
+    warnings.warn(
+        'Deprecated, please use python_requires in the setup function directly',
+        category=DeprecationWarning
+    )
     if not isinstance(specs, (list, tuple)):
         specs = [specs]
     v = sys.version_info
