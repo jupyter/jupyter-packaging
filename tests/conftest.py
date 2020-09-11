@@ -11,12 +11,12 @@ def pyproject_toml():
     """A fixture that enables other fixtures to build mock packages
     with that depend on this package.
     """
-    root_path = HERE.joinpath("../..").resolve().replace(os.sep, '/')
+    root_path = HERE.joinpath("../..").resolve()
     return """
 [build-system]
 requires = ["jupyter_packaging@file://%s", "setuptools>=40.8.0", "wheel"]
 build-backend = "setuptools.build_meta"
-""" % root_path
+""" % str(root_path).replace(os.sep, '/')
 
 
 setup = lambda name="jupyter_packaging_test_foo", data_files_spec=None, **kwargs: """
