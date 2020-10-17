@@ -521,7 +521,8 @@ def _get_develop_handler():
             for target_dir, filepaths in self.distribution.data_files:
                 for filepath in filepaths:
                     filename = os.path.basename(filepath)
-                    target = os.path.join(self.prefix, target_dir, filename)
+                    prefix = self.prefix if self.prefix is not None else sys.prefix
+                    target = os.path.join(prefix, target_dir, filename)
                     self.mkpath(os.path.dirname(target))
                     outf, copied = self.copy_file(filepath, target)
 
