@@ -519,7 +519,7 @@ def _get_develop_handler():
             self.finalize_options()
             super(_develop, self).install_for_development()
             self.run_command('handle_files')
-            prefix = self.install_base or self.prefix
+            prefix = self.install_base or self.prefix or sys.prefix
             for target_dir, filepaths in self.distribution.data_files:
                 for filepath in filepaths:
                     filename = os.path.basename(filepath)
