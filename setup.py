@@ -22,6 +22,7 @@ setup_args = dict(
     This package contains utilities for making Python packages with
     and without accompanying JavaScript packages.
     """,
+    long_description_content_type='text/x-rst',
     author          = 'Jupyter Development Team',
     author_email    = 'jupyter@googlegroups.com',
     url             = 'http://jupyter.org',
