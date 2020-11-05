@@ -71,3 +71,11 @@ git clone https://github.com/jupyter/jupyter-packaging.git
 cd jupyter-packaging
 pip install -e .
 ```
+
+You can test changes locally by creating a `pyproject.toml` with the following, replacing the local path to the git checkout:
+
+```
+[build-system]
+requires = ["jupyter_packaging@file://<path-to-git-checkout>", "setuptools>=40.8.0", "wheel"]
+build-backend = "setuptools.build_meta"
+```
