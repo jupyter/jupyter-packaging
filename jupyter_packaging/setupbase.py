@@ -11,6 +11,7 @@ within a Python package.
 """
 from collections import defaultdict
 from os.path import join as pjoin
+from pathlib import Path
 import io
 import os
 import functools
@@ -399,6 +400,29 @@ def ensure_targets(targets):
                 raise ValueError(('missing files: %s' % missing))
 
     return TargetsCheck
+
+
+def skip_if_exists(paths, CommandClass):
+    """Skip a command if list of paths exists."""
+    def should_skip():
+        return any(not Path(path).exist() for path in paths)
+    class SkipIfExistCommand(Command):
+        def initialize_options(self):
+            if not should_skip:
+                self.command = CommandClass(self.distribution)
+                self.command.initialize_options()
+            else:
+                self.command = None
+
+        def finalize_options(self):
+            if self.command is not None:
+                self.command.finalize_options()
+
+        def run(self):
+            if self.command is not None:
+                self.command.run()
+
+    return SkipIfExistCommand
 
 
 # `shutils.which` function copied verbatim from the Python-3.3 source.
