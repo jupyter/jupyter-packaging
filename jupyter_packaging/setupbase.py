@@ -592,7 +592,7 @@ def _get_data_files(data_specs, existing, *, top=None, exclude=None):
         if os.path.isabs(dname):
             dname = os.path.relpath(dname, top)
 
-        dname = dname.replace(os.sep, '/')
+        dname = dname.replace(os.sep, '/').rstrip('/')
         offset = 0 if dname in ('.', '') else len(dname) + 1
         files = _get_files(_glob_pjoin(dname, pattern), top=top)
 
