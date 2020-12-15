@@ -91,3 +91,15 @@ def test_relative_trailing_slash(tmpdir):
         ('my/target/sub2', ['main/sub2/b.json']),
     ]
 
+
+def test_nested_source_dir(tmpdir):
+    maindir = tmpdir.mkdir('main')
+    maindir.mkdir('sub1').join('a.json').write('')
+    maindir.mkdir('sub2').join('b.json').write('')
+    spec = [
+        ('my/target', 'main/sub1', 'a.json')
+    ]
+    res = _get_data_files(spec, None, top=str(tmpdir))
+    assert sorted(res) == [
+        ('my/target', ['main/sub1/a.json']),
+    ]
