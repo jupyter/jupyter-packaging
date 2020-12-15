@@ -65,3 +65,29 @@ def test_subdir_absolute_path(tmpdir):
     ]
 
 
+def test_absolute_trailing_slash(tmpdir):
+    maindir = tmpdir.mkdir('main')
+    maindir.mkdir('sub1').join('a.json').write('')
+    maindir.mkdir('sub2').join('b.json').write('')
+    spec = [
+        ('my/target/', str(tmpdir) + '/', '**/*.*')
+    ]
+    res = _get_data_files(spec, None, top=str(tmpdir))
+    assert sorted(res) == [
+        ('my/target/main/sub1', ['main/sub1/a.json']),
+        ('my/target/main/sub2', ['main/sub2/b.json']),
+    ]
+
+def test_relative_trailing_slash(tmpdir):
+    maindir = tmpdir.mkdir('main')
+    maindir.mkdir('sub1').join('a.json').write('')
+    maindir.mkdir('sub2').join('b.json').write('')
+    spec = [
+        ('my/target/', 'main/', '**/*.json')
+    ]
+    res = _get_data_files(spec, None, top=str(tmpdir))
+    assert sorted(res) == [
+        ('my/target/sub1', ['main/sub1/a.json']),
+        ('my/target/sub2', ['main/sub2/b.json']),
+    ]
+
