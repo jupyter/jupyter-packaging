@@ -49,7 +49,7 @@ else:
         return ' '.join(map(pipes.quote, cmd_list))
 
 
-__version__ = '0.7.7'
+__version__ = '0.7.8'
 
 # ---------------------------------------------------------------------------
 # Top Level Variables
