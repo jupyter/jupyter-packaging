@@ -405,10 +405,10 @@ def ensure_targets(targets):
 def skip_if_exists(paths, CommandClass):
     """Skip a command if list of paths exists."""
     def should_skip():
-        return any(not Path(path).exist() for path in paths)
+        return all(Path(path).exist() for path in paths)
     class SkipIfExistCommand(Command):
         def initialize_options(self):
-            if not should_skip:
+            if not should_skip():
                 self.command = CommandClass(self.distribution)
                 self.command.initialize_options()
             else:
