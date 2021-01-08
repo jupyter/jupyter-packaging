@@ -160,7 +160,7 @@ def create_cmdclass(prerelease_cmd=None, package_data_spec=None,
     The package data glob patterns should be relative paths from the package
     folder containing the __init__.py file, which is given as the package
     name.
-    e.g. `dict(foo=['./bar/*', './baz/**'])`
+    e.g. `dict(foo=['bar/*', 'baz/**'])`
 
     The data files directories should be absolute paths or relative paths
     from the root directory of the repository.  Data files are specified
