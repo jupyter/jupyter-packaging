@@ -377,7 +377,8 @@ def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build',
                 log.info('Installing build dependencies with npm.  This may '
                          'take a while...')
                 run(npm_cmd + ['install'], cwd=node_package)
-                run(npm_cmd + ['run', build_cmd], cwd=node_package)
+                if build_cmd:
+                    run(npm_cmd + ['run', build_cmd], cwd=node_package)
 
     return NPM
 
