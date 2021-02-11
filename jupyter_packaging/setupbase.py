@@ -31,9 +31,9 @@ from setuptools import Command
 from setuptools.command.build_py import build_py
 
 # Note: distutils must be imported after setuptools
-from distutils.command.sdist import sdist
 from distutils import log
 
+from setuptools.command.sdist import sdist
 from setuptools.command.develop import develop
 from setuptools.command.bdist_egg import bdist_egg
 
