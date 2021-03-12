@@ -1,8 +1,14 @@
 import os
 import pathlib
 from pytest import fixture
+from subprocess import run
 
 HERE = pathlib.Path(__file__).resolve()
+
+
+@fixture(scope="session", autouse=True)
+def clear_pip_cache():
+    run(['python', '-m', 'pip', 'cache', 'remove', 'jupyter_packaging'])
 
 
 @fixture
@@ -13,45 +19,56 @@ def pyproject_toml():
     root_path = HERE.joinpath("../..").resolve()
     return """
 [build-system]
-requires = ["jupyter_packaging@file://%s", "setuptools>=40.8.0", "wheel"]
+requires = ["jupyter_packaging@file://%s"]
 build-backend = "setuptools.build_meta"
 """ % str(root_path).replace(os.sep, '/')
 
+setup_cfg_maker = lambda name="jupyter_packaging_test_foo": """
+[metadata]
+name = {name}
+version = 0.1
+author = Jupyter Development Team
+author_email = jupyter@googlegroups.com
+url = http://jupyter.org
+description="foo package",
+long_description="long_description",
+long_description_content_type="text/markdown",
 
-setup = lambda name="jupyter_packaging_test_foo", data_files_spec=None, **kwargs: """
-from jupyter_packaging import create_cmdclass
+[options]
+zip_safe = False
+include_package_data = True
+packages = find:
+python_requires = >=3.6
+""".format(name=name)
+
+setup_maker = lambda name="jupyter_packaging_test_foo", data_files_spec=None, **kwargs: """
+from jupyter_packaging import get_data_files
 import setuptools
 import os
-
-
-name = "{name}"
-
 
 def exclude(filename):
     return os.path.basename(filename) == "exclude.py"
 
-cmdclass = create_cmdclass(
-    data_files_spec={data_files_spec},
-    exclude=exclude
-)
+data_files=get_data_files({data_files_spec}, exclude=exclude)
 
-setup_args = dict(
+setuptools.setup(data_files=data_files, {setup_args})
+""".format(
     name=name,
-    version="0.1",
-    url="foo url",
-    author="foo author",
-    description="foo package",
-    long_description="long_description",
-    long_description_content_type="text/markdown",
-    cmdclass= cmdclass,
-    zip_safe=False,
-    include_package_data=True,
-    {setup_args}
+    data_files_spec=data_files_spec,
+    setup_args="".join(['{}={},\n\t'.format(key, str(val)) for key, val in kwargs.items()])
 )
 
+setup_maker_deprecated = lambda name="jupyter_packaging_test_foo", data_files_spec=None, **kwargs: """
+from jupyter_packaging import create_cmdclass
+import setuptools
+import os
 
-if __name__ == "__main__":
-    setuptools.setup(**setup_args)
+def exclude(filename):
+    return os.path.basename(filename) == "exclude.py"
+
+cmdclass = create_cmdclass(data_files_spec={data_files_spec}, exclude=exclude)
+
+setuptools.setup(cmdclass=cmdclass, {setup_args})
 """.format(
     name=name,
     data_files_spec=data_files_spec,
@@ -59,12 +76,8 @@ if __name__ == "__main__":
 )
 
 
-@fixture
-def make_package(tmp_path, pyproject_toml):
-    """A callable fixture that creates a mock python package
-    in tmp_path and returns the package directory
-    """
-    def stuff(
+def make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker):
+    def do_stuff(
         name="jupyter_packaging_test_foo",
         data_files=None,
         data_files_spec=None,
@@ -94,7 +107,7 @@ def make_package(tmp_path, pyproject_toml):
         # 1. Add a setup.py
         setuppy = pkg.joinpath("setup.py")
         # Pass the data_file spec to the setup.py
-        setup_content = setup(
+        setup_content = setup_func(
             name=name,
             data_files_spec=data_files_spec,
             **setup_args
@@ -102,19 +115,39 @@ def make_package(tmp_path, pyproject_toml):
         setuppy.write_text(setup_content)
 
         # 2. Add pyproject.toml to package.
-        with open(pkg.joinpath('pyproject.toml'), 'w') as fid:
-            fid.write(pyproject_toml)
+        pkg.joinpath('pyproject.toml').write_text(pyproject_toml)
+
+        # 3. Add setup.cfg to package
+        pkg.joinpath('setup.cfg').write_text(setup_cfg_maker(name=name))
 
         # 3. Add datafiles content.
+        manifest = pkg / 'MANIFEST.in'
         if data_files:
             for datafile_path in data_files:
                 data_file = pkg.joinpath(datafile_path)
                 data_dir = data_file.parent
                 data_dir.mkdir(parents=True, exist_ok=True)
                 data_file.write_text("hello, world!")
+                text = manifest.read_text()
+                manifest.write_text(text + f'\ninclude {datafile_path}')
         return pkg
+    return do_stuff
 
-    return stuff
+
+@fixture
+def make_package(tmp_path, pyproject_toml):
+    """A callable fixture that creates a mock python package
+    in tmp_path and returns the package directory
+    """
+    return make_package_base(tmp_path, pyproject_toml)
+
+
+@fixture
+def make_package_deprecated(tmp_path, pyproject_toml):
+    """A callable fixture that creates a mock python package
+    in tmp_path and returns the package directory
+    """
+    return make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker_deprecated)
 
 
 @fixture
