@@ -6,6 +6,8 @@ import shutil
 import pathlib
 import sys
 
+from deprecation import fail_if_not_removed
+
 
 
 data_files_combinations = [
@@ -21,7 +23,7 @@ data_files_combinations = [
         # data file source
         ("share/test.txt",),
         # data file spec
-        ("jupyter-packaging-test/level1", "share", "**/*"),
+        ("jupyter-packaging-test/level1", "share", "**/[a-z]est.txt"),
         # data file target
         "jupyter-packaging-test/level1/test.txt"
     ),
@@ -52,13 +54,15 @@ data_files_combinations = [
 
 ]
 
+
+@fail_if_not_removed
 @pytest.mark.parametrize(
     'source,spec,target',
     data_files_combinations
 )
-def test_develop(make_package, source,spec,target):
+def test_develop(make_package_deprecated, source,spec,target):
     name = 'jupyter_packaging_test_foo'
-    package_dir = make_package(name=name, data_files=source, data_files_spec=[spec])
+    package_dir = make_package_deprecated(name=name, data_files=source, data_files_spec=[spec])
     target_path = pathlib.Path(sys.base_prefix).joinpath(target)
     if target_path.exists():
         shutil.rmtree(str(target_path.parent))

@@ -18,9 +18,15 @@ import functools
 import pipes
 import re
 import shlex
+from shutil import which
 import subprocess
 import sys
 
+try:
+    from deprecation import deprecated
+except ImportError:
+    # shim deprecated to allow setuptools to find the version string in this file
+    deprecated = lambda *args, **kwargs: lambda *args, **kwargs: None
 
 # BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
 # update it when the contents of directories change.
@@ -29,6 +35,7 @@ if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 
 from setuptools import Command
 from setuptools.command.build_py import build_py
+from setuptools.config import StaticModule
 
 # Note: distutils must be imported after setuptools
 from distutils import log
@@ -39,10 +46,10 @@ from setuptools.command.bdist_egg import bdist_egg
 
 try:
     from wheel.bdist_wheel import bdist_wheel
-except ImportError:
+except ImportError:  # pragma: no cover
     bdist_wheel = None
 
-if sys.platform == 'win32':
+if sys.platform == 'win32':   # pragma: no cover
     from subprocess import list2cmdline
 else:
     def list2cmdline(cmd_list):
@@ -66,28 +73,341 @@ else:
 
 
 # ---------------------------------------------------------------------------
-# Public Functions
+# Core Functions
 # ---------------------------------------------------------------------------
 
-def get_version(file, name='__version__'):
-    """Get the version of the package from the given file by
-    executing it and extracting the given `name`.
+def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dist=None):
+    """Make a setuptools cmdclass that calls a prebuild function before installing.
+
+    Parameters
+    ----------
+    pre_develop: function
+        The function to call prior to the develop command.
+    pre_dist: function
+        The function to call prior to the sdist and wheel commands
+    post_develop: function
+        The function to call after the develop command.
+    post_dist: function
+        The function to call after the sdist and wheel commands.
+
+    Notes
+    -----
+    For any function given, creates a new `setuptools` command that can be run separately,
+    e.g. `python setup.py pre_develop`.
+
+    Returns
+    -------
+    A cmdclass dictionary for setup args.
     """
-    path = os.path.realpath(file)
+    cmdclass = {}
+
+    def _make_command(name, func):
+        class _Wrapped(BaseCommand):
+            def run(self):
+                func()
+
+        _Wrapped.__name__ = name
+        cmdclass[name] = _Wrapped
+
+    for name in ['pre_develop', 'post_develop', 'pre_dist', 'post_dist']:
+        if locals()[name]:
+            _make_command(name, locals()[name])
+
+    def _make_wrapper(klass, pre_build, post_build):
+        class _Wrapped(klass):
+            def run(self):
+                if pre_build:
+                    self.run_command(pre_build.__name__)
+                klass.run(self)
+                if post_build:
+                    self.run_command(post_build.__name__)
+        cmdclass[klass.__name__] = _Wrapped
+
+    if pre_develop or post_develop:
+        _make_wrapper(develop, pre_develop, post_develop)
+
+    if pre_dist or post_dist:
+        _make_wrapper(sdist, pre_dist, post_dist)
+        _make_wrapper(bdist_wheel, pre_dist, post_dist)
+
+    return cmdclass
+
+
+def npm_builder(path=None, build_dir=None, source_dir=None, build_cmd='build',
+                force=False, npm=None):
+    """Create a build function for managing an npm installation.
+
+    Note: The function is a no-op if the `--skip-npm` cli flag is used.
+
+    Parameters
+    ----------
+    path: str, optional
+        The base path of the node package. Defaults to the current directory.
+    build_dir: str, optional
+        The target build directory.  If this and source_dir are given,
+        the JavaScript will only be build if necessary.
+    source_dir: str, optional
+        The source code directory.
+    build_cmd: str, optional
+        The npm command to build assets to the build_dir.
+    npm: str or list, optional.
+        The npm executable name, or a tuple of ['node', executable].
+
+    Returns
+    -------
+    A build function to use with `wrap_installers`
+    """
+    def builder():
+        if skip_npm:
+            log.info('Skipping npm-installation')
+            return
+        node_package = path or os.path.abspath(os.getcwd())
+        node_modules = pjoin(node_package, 'node_modules')
+        is_yarn = os.path.exists(pjoin(node_package, 'yarn.lock'))
+
+        npm_cmd = npm
+
+        if npm is None:
+            if is_yarn:
+                npm_cmd = ['yarn']
+            else:
+                npm_cmd = ['npm']
+
+        if not which(npm_cmd[0]):
+            log.error("`{0}` unavailable.  If you're running this command "
+                        "using sudo, make sure `{0}` is available to sudo"
+                        .format(npm_cmd[0]))
+            return
+
+        if build_dir and source_dir and not force:
+            should_build = is_stale(build_dir, source_dir)
+        else:
+            should_build = True
+
+        if should_build:
+            log.info('Installing build dependencies with npm.  This may '
+                        'take a while...')
+            run(npm_cmd + ['install'], cwd=node_package)
+            if build_cmd:
+                run(npm_cmd + ['run', build_cmd], cwd=node_package)
+    return builder
+
+# ---------------------------------------------------------------------------
+# Utility Functions
+# ---------------------------------------------------------------------------
+
+def get_data_files(data_specs, *, top=None, exclude=None):
+    """Expand data file specs into valid data files metadata.
+
+    Parameters
+    ----------
+    data_files_spec: list
+        A list of (path, dname, pattern) tuples where the path is the
+        `data_files` install path, dname is the source directory, and the
+        pattern is a glob pattern.
+    top: str, optional
+        The top directory
+    exclude: func, optional
+        Function used to test whether to exclude a file
+
+    Returns
+    -------
+    A valid list of data_files items.
+    """
+    return _get_data_files(data_specs, None, top=top, exclude=exclude)
+
+
+def get_version(fpath, name='__version__'):
+    """Get the version of the package from the given file by extracting the given `name`.
+    """
+    # Try to get it from a static import first
+    try:
+
+        module = StaticModule(fpath.replace(os.sep, '.').replace('.py', ''))
+        return getattr(module, name)
+    except Exception as e:
+        pass
+
+    path = os.path.realpath(fpath)
     version_ns = {}
     with io.open(path, encoding="utf8") as f:
         exec(f.read(), {}, version_ns)
     return version_ns[name]
 
 
+def run(cmd, **kwargs):
+    """Echo a command before running it."""
+    log.info('> ' + list2cmdline(cmd))
+    kwargs.setdefault('shell', os.name == 'nt')
+    if not isinstance(cmd, (list, tuple)):
+        cmd = shlex.split(cmd)
+    cmd_path = which(cmd[0])
+    if not cmd_path:
+        raise ValueError("Aborting. Could not find cmd (%s) in path. "
+                 "If command is not expected to be in user's path, "
+                 "use an absolute path." % cmd[0])
+    cmd[0] = cmd_path
+    return subprocess.check_call(cmd, **kwargs)
+
+
+def is_stale(target, source):
+    """Test whether the target file/directory is stale based on the source
+       file/directory.
+    """
+    if not os.path.exists(target):
+        return True
+    target_mtime = recursive_mtime(target) or 0
+    return compare_recursive_mtime(source, cutoff=target_mtime)
+
+
+class BaseCommand(Command):
+    """Empty command because Command needs subclasses to override too much"""
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def get_inputs(self):
+        return []
+
+    def get_outputs(self):
+        return []
+
+
+def combine_commands(*commands):
+    """Return a Command that combines several commands."""
+    class CombinedCommand(BaseCommand):
+        def initialize_options(self):
+            self.commands = []
+            for C in commands:
+                self.commands.append(C(self.distribution))
+            for c in self.commands:
+                c.initialize_options()
+
+        def finalize_options(self):
+            for c in self.commands:
+                c.finalize_options()
+
+        def run(self):
+            for c in self.commands:
+                c.run()
+    return CombinedCommand
+
+
+def compare_recursive_mtime(path, cutoff, newest=True):
+    """Compare the newest/oldest mtime for all files in a directory.
+
+    Cutoff should be another mtime to be compared against. If an mtime that is
+    newer/older than the cutoff is found it will return True.
+    E.g. if newest=True, and a file in path is newer than the cutoff, it will
+    return True.
+    """
+    if os.path.isfile(path):
+        mt = mtime(path)
+        if newest:
+            if mt > cutoff:
+                return True
+        elif mt < cutoff:
+            return True
+    for dirname, _, filenames in os.walk(path, topdown=False):
+        for filename in filenames:
+            mt = mtime(pjoin(dirname, filename))
+            if newest:  # Put outside of loop?
+                if mt > cutoff:
+                    return True
+            elif mt < cutoff:
+                return True
+    return False
+
+
+def recursive_mtime(path, newest=True):
+    """Gets the newest/oldest mtime for all files in a directory."""
+    if os.path.isfile(path):
+        return mtime(path)
+    current_extreme = None
+    for dirname, dirnames, filenames in os.walk(path, topdown=False):
+        for filename in filenames:
+            mt = mtime(pjoin(dirname, filename))
+            if newest:  # Put outside of loop?
+                if mt >= (current_extreme or mt):
+                    current_extreme = mt
+            elif mt <= (current_extreme or mt):
+                current_extreme = mt
+    return current_extreme
+
+
+def mtime(path):
+    """shorthand for mtime"""
+    return os.stat(path).st_mtime
+
+
+def skip_if_exists(paths, CommandClass):
+    """Skip a command if list of paths exists."""
+    def should_skip():
+        return all(Path(path).exists() for path in paths)
+    class SkipIfExistCommand(Command):
+        def initialize_options(self):
+            if not should_skip():
+                self.command = CommandClass(self.distribution)
+                self.command.initialize_options()
+            else:
+                self.command = None
+
+        def finalize_options(self):
+            if self.command is not None:
+                self.command.finalize_options()
+
+        def run(self):
+            if self.command is not None:
+                self.command.run()
+
+    return SkipIfExistCommand
+
+
+def ensure_targets(targets):
+    """Return a Command that checks that certain files exist.
+
+    Raises a ValueError if any of the files are missing.
+
+    Note: The check is skipped if the `--skip-npm` flag is used.
+    """
+    class TargetsCheck(BaseCommand):
+        def run(self):
+            if skip_npm:
+                log.info('Skipping target checks')
+                return
+            missing = [t for t in targets if not os.path.exists(t)]
+            if missing:
+                raise ValueError(('missing files: %s' % missing))
+
+    return TargetsCheck
+
+
+# ---------------------------------------------------------------------------
+# Deprecated Functions
+# ---------------------------------------------------------------------------
+
+@deprecated(deprecated_in="0.8", removed_in="1.0", current_version=__version__,
+            details="Use `BaseCommand` directly instead")
+def command_for_func(func):
+    """Create a command that calls the given function."""
+    class FuncCommand(BaseCommand):
+
+        def run(self):
+            func()
+            update_package_data(self.distribution)
+
+    return FuncCommand
+
+
+@deprecated(deprecated_in="0.7", removed_in="1.0", current_version=__version__,
+            details="Use `setuptools` `python_requires` instead")
 def ensure_python(specs):
     """Given a list of range specifiers for python, ensure compatibility.
     """
-    import warnings
-    warnings.warn(
-        'Deprecated, please use python_requires in the setup function directly',
-        category=DeprecationWarning
-    )
     if not isinstance(specs, (list, tuple)):
         specs = [specs]
     v = sys.version_info
@@ -103,25 +423,26 @@ def ensure_python(specs):
     raise ValueError('Python version %s unsupported' % part)
 
 
+@deprecated(deprecated_in="0.7", removed_in="1.0", current_version=__version__,
+            details="Use `setuptools.find_packages` instead")
 def find_packages(top):
     """
     Find all of the packages.
     """
-    import warnings
-    warnings.warn(
-        'Deprecated, please use setuptools.find_packages',
-        category=DeprecationWarning
-    )
     from setuptools import find_packages as fp
     return fp(top)
 
 
+@deprecated(deprecated_in="0.8", removed_in="1.0", current_version=__version__,
+            details="Use `use_package_data=True` and `MANIFEST.in` instead")
 def update_package_data(distribution):
     """update build_py options to get package_data changes"""
     build_py = distribution.get_command_obj('build_py')
     build_py.finalize_options()
 
 
+@deprecated(deprecated_in="0.8", removed_in="1.0", current_version=__version__,
+            details="Not needed")
 class bdist_egg_disabled(bdist_egg):
     """Disabled version of bdist_egg
 
@@ -133,6 +454,12 @@ class bdist_egg_disabled(bdist_egg):
                  " to install from source.")
 
 
+@deprecated(deprecated_in="0.8", removed_in="1.0", current_version=__version__,
+            details=""""
+Use `wrap_installers` to handle prebuild steps in cmdclass.
+Use `get_data_files` to handle data files.
+Use `include_package_data=True` and `MANIFEST.in` for package data.
+""")
 def create_cmdclass(prerelease_cmd=None, package_data_spec=None,
                     data_files_spec=None, exclude=None):
     """Create a command class with the given optional prerelease class.
@@ -198,130 +525,8 @@ def create_cmdclass(prerelease_cmd=None, package_data_spec=None,
     return cmdclass
 
 
-def command_for_func(func):
-    """Create a command that calls the given function."""
-
-    class FuncCommand(BaseCommand):
-
-        def run(self):
-            func()
-            update_package_data(self.distribution)
-
-    return FuncCommand
-
-
-def run(cmd, **kwargs):
-    """Echo a command before running it."""
-    log.info('> ' + list2cmdline(cmd))
-    kwargs.setdefault('shell', os.name == 'nt')
-    if not isinstance(cmd, (list, tuple)) and os.name != 'nt':
-        cmd = shlex.split(cmd)
-    cmd_path = which(cmd[0])
-    if not cmd_path:
-        sys.exit("Aborting. Could not find cmd (%s) in path. "
-                 "If command is not expected to be in user's path, "
-                 "use an absolute path." % cmd[0])
-    cmd[0] = cmd_path
-    return subprocess.check_call(cmd, **kwargs)
-
-
-def is_stale(target, source):
-    """Test whether the target file/directory is stale based on the source
-       file/directory.
-    """
-    if not os.path.exists(target):
-        return True
-    target_mtime = recursive_mtime(target) or 0
-    return compare_recursive_mtime(source, cutoff=target_mtime)
-
-
-class BaseCommand(Command):
-    """Empty command because Command needs subclasses to override too much"""
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def get_inputs(self):
-        return []
-
-    def get_outputs(self):
-        return []
-
-
-def combine_commands(*commands):
-    """Return a Command that combines several commands."""
-
-    class CombinedCommand(Command):
-        user_options = []
-
-        def initialize_options(self):
-            self.commands = []
-            for C in commands:
-                self.commands.append(C(self.distribution))
-            for c in self.commands:
-                c.initialize_options()
-
-        def finalize_options(self):
-            for c in self.commands:
-                c.finalize_options()
-
-        def run(self):
-            for c in self.commands:
-                c.run()
-    return CombinedCommand
-
-
-def compare_recursive_mtime(path, cutoff, newest=True):
-    """Compare the newest/oldest mtime for all files in a directory.
-
-    Cutoff should be another mtime to be compared against. If an mtime that is
-    newer/older than the cutoff is found it will return True.
-    E.g. if newest=True, and a file in path is newer than the cutoff, it will
-    return True.
-    """
-    if os.path.isfile(path):
-        mt = mtime(path)
-        if newest:
-            if mt > cutoff:
-                return True
-        elif mt < cutoff:
-            return True
-    for dirname, _, filenames in os.walk(path, topdown=False):
-        for filename in filenames:
-            mt = mtime(pjoin(dirname, filename))
-            if newest:  # Put outside of loop?
-                if mt > cutoff:
-                    return True
-            elif mt < cutoff:
-                return True
-    return False
-
-
-def recursive_mtime(path, newest=True):
-    """Gets the newest/oldest mtime for all files in a directory."""
-    if os.path.isfile(path):
-        return mtime(path)
-    current_extreme = None
-    for dirname, dirnames, filenames in os.walk(path, topdown=False):
-        for filename in filenames:
-            mt = mtime(pjoin(dirname, filename))
-            if newest:  # Put outside of loop?
-                if mt >= (current_extreme or mt):
-                    current_extreme = mt
-            elif mt <= (current_extreme or mt):
-                current_extreme = mt
-    return current_extreme
-
-
-def mtime(path):
-    """shorthand for mtime"""
-    return os.stat(path).st_mtime
-
-
+@deprecated(deprecated_in="0.8", removed_in="1.0", current_version=__version__,
+            details="Use `npm_builder` and `wrap_installers`")
 def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build',
                 force=False, npm=None):
     """Return a Command for managing an npm installation.
@@ -342,149 +547,22 @@ def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build',
     npm: str or list, optional.
         The npm executable name, or a tuple of ['node', executable].
     """
+    npm_builder(path=path, build_dir=build_dir, source_dir=source_dir, build_cmd=build_cmd, force=force, npm=npm)
 
     class NPM(BaseCommand):
         description = 'install package.json dependencies using npm'
 
         def run(self):
-            if skip_npm:
-                log.info('Skipping npm-installation')
-                return
-            node_package = path or os.path.abspath(os.getcwd())
-            node_modules = pjoin(node_package, 'node_modules')
-            is_yarn = os.path.exists(pjoin(node_package, 'yarn.lock'))
-
-            npm_cmd = npm
-
-            if npm is None:
-                if is_yarn:
-                    npm_cmd = ['yarn']
-                else:
-                    npm_cmd = ['npm']
-
-            if not which(npm_cmd[0]):
-                log.error("`{0}` unavailable.  If you're running this command "
-                          "using sudo, make sure `{0}` is available to sudo"
-                          .format(npm_cmd[0]))
-                return
-
-            if build_dir and source_dir and not force:
-                should_build = is_stale(build_dir, source_dir)
-            else:
-                should_build = True
-
-            if should_build:
-                log.info('Installing build dependencies with npm.  This may '
-                         'take a while...')
-                run(npm_cmd + ['install'], cwd=node_package)
-                if build_cmd:
-                    run(npm_cmd + ['run', build_cmd], cwd=node_package)
+            builder()
 
     return NPM
-
-
-def ensure_targets(targets):
-    """Return a Command that checks that certain files exist.
-
-    Raises a ValueError if any of the files are missing.
-
-    Note: The check is skipped if the `--skip-npm` flag is used.
-    """
-
-    class TargetsCheck(BaseCommand):
-        def run(self):
-            if skip_npm:
-                log.info('Skipping target checks')
-                return
-            missing = [t for t in targets if not os.path.exists(t)]
-            if missing:
-                raise ValueError(('missing files: %s' % missing))
-
-    return TargetsCheck
-
-
-def skip_if_exists(paths, CommandClass):
-    """Skip a command if list of paths exists."""
-    def should_skip():
-        return all(Path(path).exists() for path in paths)
-    class SkipIfExistCommand(Command):
-        def initialize_options(self):
-            if not should_skip():
-                self.command = CommandClass(self.distribution)
-                self.command.initialize_options()
-            else:
-                self.command = None
-
-        def finalize_options(self):
-            if self.command is not None:
-                self.command.finalize_options()
-
-        def run(self):
-            if self.command is not None:
-                self.command.run()
-
-    return SkipIfExistCommand
-
-
-# `shutils.which` function copied verbatim from the Python-3.3 source.
-def which(cmd, mode=os.F_OK | os.X_OK, path=None):
-    """Given a command, mode, and a PATH string, return the path which
-    conforms to the given mode on the PATH, or None if there is no such
-    file.
-    `mode` defaults to os.F_OK | os.X_OK. `path` defaults to the result
-    of os.environ.get("PATH"), or can be overridden with a custom search
-    path.
-    """
-
-    # Check that a given file can be accessed with the correct mode.
-    # Additionally check that `file` is not a directory, as on Windows
-    # directories pass the os.access check.
-    def _access_check(fn, mode):
-        return (os.path.exists(fn) and os.access(fn, mode) and
-                not os.path.isdir(fn))
-
-    # Short circuit. If we're given a full path which matches the mode
-    # and it exists, we're done here.
-    if _access_check(cmd, mode):
-        return cmd
-
-    path = (path or os.environ.get("PATH", os.defpath)).split(os.pathsep)
-
-    if sys.platform == "win32":
-        # The current directory takes precedence on Windows.
-        if os.curdir not in path:
-            path.insert(0, os.curdir)
-
-        # PATHEXT is necessary to check on Windows.
-        pathext = os.environ.get("PATHEXT", "").split(os.pathsep)
-        # See if the given file matches any of the expected path extensions.
-        # This will allow us to short circuit when given "python.exe".
-        matches = [cmd for ext in pathext if cmd.lower().endswith(ext.lower())]
-        # If it does match, only test that one, otherwise we have to try
-        # others.
-        files = [cmd] if matches else [cmd + ext.lower() for ext in pathext]
-    else:
-        # On other platforms you don't have things like PATHEXT to tell you
-        # what file suffixes are executable, so just pass on cmd as-is.
-        files = [cmd]
-
-    seen = set()
-    for dir in path:
-        dir = os.path.normcase(dir)
-        if dir not in seen:
-            seen.add(dir)
-            for thefile in files:
-                name = os.path.join(dir, thefile)
-                if _access_check(name, mode):
-                    return name
-    return None
-
 
 # ---------------------------------------------------------------------------
 # Private Functions
 # ---------------------------------------------------------------------------
 
-
+@deprecated(deprecated_in="0.8", removed_in="1.0", current_version=__version__,
+            details="Use `npm_builder` and `wrap_installers`")
 def _wrap_command(cmds, cls, strict=True):
     """Wrap a setup command
 
@@ -514,6 +592,8 @@ def _wrap_command(cmds, cls, strict=True):
     return WrappedCommand
 
 
+@deprecated(deprecated_in="0.8", removed_in="1.0", current_version=__version__,
+            details="Use `npm_builder` and `wrap_installers`")
 def _get_file_handler(package_data_spec, data_files_spec, exclude=None):
     """Get a package_data and data_files handler command.
     """
@@ -536,6 +616,8 @@ def _get_file_handler(package_data_spec, data_files_spec, exclude=None):
     return FileHandler
 
 
+@deprecated(deprecated_in="0.8", removed_in="1.0", current_version=__version__,
+            details="Use `npm_builder` and `wrap_installers`")
 def _get_develop_handler():
     """Get a handler for the develop command"""
     class _develop(develop):
@@ -657,6 +739,8 @@ def _get_files(file_patterns, top=None):
     return list(files)
 
 
+@deprecated(deprecated_in="0.8", removed_in="1.0", current_version=__version__,
+            details="Use `npm_builder` and `wrap_installers`")
 def _get_package_data(root, file_patterns=None):
     """Expand file patterns to a list of `package_data` paths.
 
