@@ -1,8 +1,15 @@
-# Change Log
+# Changelog
+
+## 0.8.0
+
+* Proposal: Improved integration with setuptools [#69](https://github.com/jupyter/jupyter-packaging/pull/69) ([@afshin](https://github.com/afshin))
+* Update changelog [#68](https://github.com/jupyter/jupyter-packaging/pull/68) ([@blink1073](https://github.com/blink1073))
+
 
 ## 0.7.12
 
 * Use sdist from setuptools not distutils [#66](https://github.com/jupyter/jupyter-packaging/pull/66) ([@astrofrog](https://github.com/astrofrog))
+
 ## 0.7.11
 
 * Fix packagedata docstring examples [#62](https://github.com/jupyter/jupyter-packaging/pull/62) ([@vidartf](https://github.com/vidartf))
