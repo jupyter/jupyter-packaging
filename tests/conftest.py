@@ -1,9 +1,16 @@
+import json
 import os
 import pathlib
 from pytest import fixture
 from subprocess import run
 
 HERE = pathlib.Path(__file__).resolve()
+
+PACKAGE_JSON = json.dumps(dict(
+    name="foo",
+    version="0.1.0",
+    scripts=dict(build="echo 'hi'")
+))
 
 
 @fixture(scope="session", autouse=True)
@@ -59,14 +66,16 @@ setuptools.setup(data_files=data_files, {setup_args})
 )
 
 setup_maker_deprecated = lambda name="jupyter_packaging_test_foo", data_files_spec=None, **kwargs: """
-from jupyter_packaging import create_cmdclass
+from jupyter_packaging import create_cmdclass, install_npm
 import setuptools
 import os
 
 def exclude(filename):
     return os.path.basename(filename) == "exclude.py"
 
-cmdclass = create_cmdclass(data_files_spec={data_files_spec}, exclude=exclude)
+
+cmdclass = create_cmdclass('jsdeps', data_files_spec={data_files_spec}, exclude=exclude)
+cmdclass['jsdeps'] = install_npm()
 
 setuptools.setup(cmdclass=cmdclass, {setup_args})
 """.format(
@@ -147,7 +156,10 @@ def make_package_deprecated(tmp_path, pyproject_toml):
     """A callable fixture that creates a mock python package
     in tmp_path and returns the package directory
     """
-    return make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker_deprecated)
+    package = make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker_deprecated)
+    package_json = tmp_path / "package.json"
+    package_json.write_text(PACKAGE_JSON, encoding='utf-8')
+    return package
 
 
 @fixture
