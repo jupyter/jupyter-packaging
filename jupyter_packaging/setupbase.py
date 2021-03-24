@@ -547,7 +547,7 @@ def install_npm(path=None, build_dir=None, source_dir=None, build_cmd='build',
     npm: str or list, optional.
         The npm executable name, or a tuple of ['node', executable].
     """
-    npm_builder(path=path, build_dir=build_dir, source_dir=source_dir, build_cmd=build_cmd, force=force, npm=npm)
+    builder = npm_builder(path=path, build_dir=build_dir, source_dir=source_dir, build_cmd=build_cmd, force=force, npm=npm)
 
     class NPM(BaseCommand):
         description = 'install package.json dependencies using npm'
