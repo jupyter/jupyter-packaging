@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+
+* Fix Usage of install_npm [#71](https://github.com/jupyter/jupyter-packaging/pull/71) ([@afshin](https://github.com/afshin))
+
 ## 0.8.0
 
 * Proposal: Improved integration with setuptools [#69](https://github.com/jupyter/jupyter-packaging/pull/69) ([@afshin](https://github.com/afshin))
