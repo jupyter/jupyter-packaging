@@ -107,6 +107,7 @@ def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dis
                 func()
 
         _Wrapped.__name__ = name
+        func.__name__ = name
         cmdclass[name] = _Wrapped
 
     for name in ['pre_develop', 'post_develop', 'pre_dist', 'post_dist']:
