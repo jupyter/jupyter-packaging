@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.2
+
+* Fix invalid command build [#72](https://github.com/jupyter/jupyter-packaging/pull/72) ([@xmnlab](https://github.com/xmnlab))
+
 ## 0.8.1
 
 * Fix Usage of install_npm [#71](https://github.com/jupyter/jupyter-packaging/pull/71) ([@afshin](https://github.com/afshin))
