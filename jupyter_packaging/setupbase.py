@@ -136,7 +136,7 @@ def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dis
 
 def npm_builder(path=None, build_dir=None, source_dir=None, build_cmd='build',
                 force=False, npm=None):
-    """Create a build function for managing an npm installation.
+    """Build function factory for managing an npm installation.
 
     Note: The function is a no-op if the `--skip-npm` cli flag is used.
 
