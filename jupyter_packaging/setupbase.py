@@ -32,7 +32,7 @@ except ImportError:
 # update it when the contents of directories change.
 if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 
-
+from pkg_resources import parse_version
 from setuptools import Command
 from setuptools.command.build_py import build_py
 from setuptools.config import StaticModule
@@ -233,6 +233,15 @@ def get_version(fpath, name='__version__'):
     with io.open(path, encoding="utf8") as f:
         exec(f.read(), {}, version_ns)
     return version_ns[name]
+
+
+def get_version_info(version_str):
+    """Get a version info tuple given a version string"""
+    parsed = parse_version(version_str)
+    version_info = [parsed.major, parsed.minor, parsed.micro]
+    if parsed.base_version != parsed.public:
+        version_info.append(parsed.public[len(parsed.base_version):])
+    return tuple(version_info)
 
 
 def run(cmd, **kwargs):

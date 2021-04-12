@@ -13,6 +13,14 @@ def test_get_version():
     assert version == pkg.__version__
 
 
+def test_get_version_info():
+    assert pkg.get_version_info('1.3.0') == (1,3,0)
+    assert pkg.get_version_info('1.3.0a1') == (1,3,0,'a1')
+    assert pkg.get_version_info('1.3.0.dev0') == (1,3,0,'.dev0')
+    with pytest.raises(AttributeError):
+        pkg.get_version_info('1.3.0foo1')
+
+
 def test_combine_commands():
     class MockCommand(pkg.BaseCommand):
         called = 0
