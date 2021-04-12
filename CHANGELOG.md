@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.3
+
+* Fixes handling of backend [#75](https://github.com/jupyter/jupyter-packaging/pull/75) ([@jtpio](https://github.com/jtpio))
+
 ## 0.8.2
 
 * Fix invalid command build [#72](https://github.com/jupyter/jupyter-packaging/pull/72) ([@xmnlab](https://github.com/xmnlab))
