@@ -50,7 +50,7 @@ requires = ["jupyter_packaging~=0.8.0"]
 build-backend = "jupyter_packaging.build_api"
 
 [tool.jupyter-packaging.builder]
-func = "jupyter_packaging.npm_builder"
+factory = "jupyter_packaging.npm_builder"
 
 [tool.jupyter-packaging.build-args]
 build_cmd = "build:src"
@@ -92,8 +92,8 @@ Vendor `setupbase.py` locally alongside `setup.py` and import the module directl
 ```py
 import setuptools
 from setupbase import wrap_installers, npm_builder
-builder = npm_builder
-cmdclass = wrap_installers(post_develop=builder, pre_dist=builder)
+func = npm_builder()
+cmdclass = wrap_installers(post_develop=func, pre_dist=func)
 setup(cmdclass=cmdclass)
 ```
 

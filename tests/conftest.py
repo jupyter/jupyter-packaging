@@ -5,11 +5,12 @@ from pytest import fixture
 from subprocess import run
 
 HERE = pathlib.Path(__file__).resolve()
+NAME = "jupyter_packaging_test_foo"
 
 PACKAGE_JSON = json.dumps(dict(
     name="foo",
     version="0.1.0",
-    scripts=dict(build="echo 'hi'")
+    scripts=dict(build=f"touch {NAME}/generated.js")
 ))
 
 
@@ -30,7 +31,7 @@ requires = ["jupyter_packaging@file://%s"]
 build-backend = "setuptools.build_meta"
 """ % str(root_path).replace(os.sep, '/')
 
-setup_cfg_maker = lambda name="jupyter_packaging_test_foo": """
+setup_cfg_maker = lambda name=NAME: """
 [metadata]
 name = {name}
 version = 0.1
@@ -48,8 +49,8 @@ packages = find:
 python_requires = >=3.6
 """.format(name=name)
 
-setup_maker = lambda name="jupyter_packaging_test_foo", data_files_spec=None, **kwargs: """
-from jupyter_packaging import get_data_files
+setup_maker = lambda name=NAME, data_files_spec=None, pre_dist=None, **kwargs: """
+from jupyter_packaging import get_data_files, wrap_installers, npm_builder
 import setuptools
 import os
 
@@ -58,14 +59,17 @@ def exclude(filename):
 
 data_files=get_data_files({data_files_spec}, exclude=exclude)
 
-setuptools.setup(data_files=data_files, {setup_args})
+cmdclass = wrap_installers(pre_dist={pre_dist})
+
+setuptools.setup(data_files=data_files, cmdclass=cmdclass, {setup_args})
 """.format(
     name=name,
     data_files_spec=data_files_spec,
+    pre_dist=pre_dist or 'lambda: print',
     setup_args="".join(['{}={},\n\t'.format(key, str(val)) for key, val in kwargs.items()])
 )
 
-setup_maker_deprecated = lambda name="jupyter_packaging_test_foo", data_files_spec=None, **kwargs: """
+setup_maker_deprecated = lambda name=NAME, data_files_spec=None, pre_dist=None, **kwargs: """
 from jupyter_packaging import create_cmdclass, install_npm
 import setuptools
 import os
@@ -85,9 +89,9 @@ setuptools.setup(cmdclass=cmdclass, {setup_args})
 )
 
 
-def make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker):
+def make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker, include_js=False):
     def do_stuff(
-        name="jupyter_packaging_test_foo",
+        name=NAME,
         data_files=None,
         data_files_spec=None,
         py_module=False
@@ -99,12 +103,12 @@ def make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker):
         # What type of a package is this, single module or nested package?
         setup_args = {}
         if py_module:
-            setup_args.update({"py_module": ["jupyter_packaging_test_foo"]})
-            pkg.joinpath('jupyter_packaging_test_foo.py').write_text('print("hello, world!")')
+            setup_args.update({"py_module": [NAME]})
+            pkg.joinpath(f'{NAME}_foo.py').write_text('print("hello, world!")')
             pkg.joinpath('MANIFEST.in').write_text('recursive-include share *.*')
         else:
             setup_args.update({"packages": "setuptools.find_packages('.')"})
-            mod = pkg.joinpath('jupyter_packaging_test_foo')
+            mod = pkg.joinpath(NAME)
             mod.mkdir()
             mod.joinpath('__init__.py').write_text('')
             mod.joinpath('main.py').write_text('print("hello, world!")')
@@ -116,9 +120,13 @@ def make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker):
         # 1. Add a setup.py
         setuppy = pkg.joinpath("setup.py")
         # Pass the data_file spec to the setup.py
+        pre_dist = None
+        if include_js:
+            pre_dist = 'npm_builder()'
         setup_content = setup_func(
             name=name,
             data_files_spec=data_files_spec,
+            pre_dist=pre_dist,
             **setup_args
         )
         setuppy.write_text(setup_content)
@@ -126,10 +134,10 @@ def make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker):
         # 2. Add pyproject.toml to package.
         pkg.joinpath('pyproject.toml').write_text(pyproject_toml)
 
-        # 3. Add setup.cfg to package
+        # 3. Add setup.cfg to package.
         pkg.joinpath('setup.cfg').write_text(setup_cfg_maker(name=name))
 
-        # 3. Add datafiles content.
+        # 4. Add datafiles content.
         manifest = pkg / 'MANIFEST.in'
         if data_files:
             for datafile_path in data_files:
@@ -138,7 +146,16 @@ def make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker):
                 data_dir.mkdir(parents=True, exist_ok=True)
                 data_file.write_text("hello, world!")
                 text = manifest.read_text()
-                manifest.write_text(text + f'\ninclude {datafile_path}')
+                manifest.write_text(f'{text}\ninclude {datafile_path}')
+
+        # 5. Add package.json if needed.
+        if include_js:
+            package_json = pkg.joinpath("package.json")
+            package_json.write_text(PACKAGE_JSON, encoding='utf-8')
+
+            text = manifest.read_text()
+            manifest.write_text(f'{text}\ninclude {name}/generated.js')
+
         return pkg
     return do_stuff
 
@@ -156,10 +173,15 @@ def make_package_deprecated(tmp_path, pyproject_toml):
     """A callable fixture that creates a mock python package
     in tmp_path and returns the package directory
     """
-    package = make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker_deprecated)
-    package_json = tmp_path / "package.json"
-    package_json.write_text(PACKAGE_JSON, encoding='utf-8')
-    return package
+    return make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker_deprecated, include_js=True)
+
+
+@fixture
+def make_hybrid_package(tmp_path, pyproject_toml):
+    """A callable fixture that creates a mock hybrid package
+    in tmp_path and returns the package directory
+    """
+    return make_package_base(tmp_path, pyproject_toml, include_js=True)
 
 
 @fixture
