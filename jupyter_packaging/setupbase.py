@@ -76,7 +76,7 @@ else:
 # Core Functions
 # ---------------------------------------------------------------------------
 
-def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dist=None):
+def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dist=None, ensured_targets=None):
     """Make a setuptools cmdclass that calls a prebuild function before installing.
 
     Parameters
@@ -89,6 +89,8 @@ def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dis
         The function to call after the develop command.
     post_dist: function
         The function to call after the sdist and wheel commands.
+    ensured_targets: list
+        A list of local file paths that should exist when the dist commands are run
 
     Notes
     -----
@@ -114,11 +116,14 @@ def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dis
         if locals()[name]:
             _make_command(name, locals()[name])
 
+    cmdclass['ensure_targets'] = ensure_targets(ensured_targets or [])
+
     def _make_wrapper(klass, pre_build, post_build):
         class _Wrapped(klass):
             def run(self):
                 if pre_build:
                     self.run_command(pre_build.__name__)
+                self.run_command('ensure_targets')
                 klass.run(self)
                 if post_build:
                     self.run_command(post_build.__name__)
@@ -127,7 +132,7 @@ def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dis
     if pre_develop or post_develop:
         _make_wrapper(develop, pre_develop, post_develop)
 
-    if pre_dist or post_dist:
+    if pre_dist or post_dist or ensured_targets:
         _make_wrapper(sdist, pre_dist, post_dist)
         _make_wrapper(bdist_wheel, pre_dist, post_dist)
 

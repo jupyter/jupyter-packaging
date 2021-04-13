@@ -49,7 +49,7 @@ packages = find:
 python_requires = >=3.6
 """.format(name=name)
 
-setup_maker = lambda name=NAME, data_files_spec=None, pre_dist=None, **kwargs: """
+setup_maker = lambda name=NAME, data_files_spec=None, pre_dist=None, ensured_targets=None, **kwargs: """
 from jupyter_packaging import get_data_files, wrap_installers, npm_builder
 import setuptools
 import os
@@ -59,17 +59,18 @@ def exclude(filename):
 
 data_files=get_data_files({data_files_spec}, exclude=exclude)
 
-cmdclass = wrap_installers(pre_dist={pre_dist})
+cmdclass = wrap_installers(pre_dist={pre_dist}, ensured_targets={ensured_targets})
 
 setuptools.setup(data_files=data_files, cmdclass=cmdclass, {setup_args})
 """.format(
     name=name,
     data_files_spec=data_files_spec,
     pre_dist=pre_dist or 'lambda: print',
+    ensured_targets=ensured_targets or [],
     setup_args="".join(['{}={},\n\t'.format(key, str(val)) for key, val in kwargs.items()])
 )
 
-setup_maker_deprecated = lambda name=NAME, data_files_spec=None, pre_dist=None, **kwargs: """
+setup_maker_deprecated = lambda name=NAME, data_files_spec=None, pre_dist=None, ensured_targets=None, **kwargs: """
 from jupyter_packaging import create_cmdclass, install_npm
 import setuptools
 import os
@@ -94,6 +95,7 @@ def make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker, include_
         name=NAME,
         data_files=None,
         data_files_spec=None,
+        ensured_targets=None,
         py_module=False
     ):
         # Create the package directory.
@@ -126,6 +128,7 @@ def make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker, include_
         setup_content = setup_func(
             name=name,
             data_files_spec=data_files_spec,
+            ensured_targets=ensured_targets,
             pre_dist=pre_dist,
             **setup_args
         )
