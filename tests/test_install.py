@@ -45,3 +45,4 @@ def test_install_missing(make_package, tmp_path):
     package_dir = make_package(name=name, ensured_targets=ensured_targets)
     with pytest.raises(subprocess.CalledProcessError):
         subprocess.check_output([shutil.which('pip'), 'install', '.'], cwd=str(package_dir))
+    subprocess.check_output([shutil.which('pip'), 'install', '-e', '.'], cwd=str(package_dir))
