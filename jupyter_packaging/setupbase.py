@@ -123,7 +123,8 @@ def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dis
             def run(self):
                 if pre_build:
                     self.run_command(pre_build.__name__)
-                self.run_command('ensure_targets')
+                if klass != develop:
+                    self.run_command('ensure_targets')
                 klass.run(self)
                 if post_build:
                     self.run_command(post_build.__name__)
