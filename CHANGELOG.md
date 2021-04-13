@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.0
+
+* Add ability to ensure targets [#77](https://github.com/jupyter/jupyter-packaging/pull/77) ([@jtpio](https://github.com/jtpio))
+* Add version info helper function [#76](https://github.com/jupyter/jupyter-packaging/pull/76) ([@afshin](https://github.com/afshin))
+
 ## 0.8.3
 
 * Fixes handling of backend [#75](https://github.com/jupyter/jupyter-packaging/pull/75) ([@jtpio](https://github.com/jtpio))
