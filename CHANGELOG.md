@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.2
+
+* Clean up handling of version info [#82](https://github.com/jupyter/jupyter-packaging/pull/82) ([@jtpio](https://github.com/jtpio))
+
 ## 0.9.1
 
 * Do not run ensure_targets in develop mode [#79](https://github.com/jupyter/jupyter-packaging/pull/79) ([@jtpio](https://github.com/jtpio))
