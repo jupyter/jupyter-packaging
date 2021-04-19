@@ -32,7 +32,7 @@ except ImportError:
 # update it when the contents of directories change.
 if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 
-from pkg_resources import parse_version
+from packaging.version import VERSION_PATTERN
 from setuptools import Command
 from setuptools.command.build_py import build_py
 from setuptools.config import StaticModule
@@ -63,6 +63,8 @@ __version__ = '0.9.1'
 # ---------------------------------------------------------------------------
 
 SEPARATORS = os.sep if os.altsep is None else os.sep + os.altsep
+VERSION_REGEX = re.compile(r"^\s*" + VERSION_PATTERN + r"\s*$", re.VERBOSE | re.IGNORECASE)
+
 
 if "--skip-npm" in sys.argv:
     print("Skipping npm install as requested.")
@@ -244,10 +246,13 @@ def get_version(fpath, name='__version__'):
 
 def get_version_info(version_str):
     """Get a version info tuple given a version string"""
-    parsed = parse_version(version_str)
-    version_info = [parsed.major, parsed.minor, parsed.micro]
-    if parsed.base_version != parsed.public:
-        version_info.append(parsed.public[len(parsed.base_version):])
+    match = VERSION_REGEX.match(version_str)
+    if not match:
+        raise ValueError(f'Invalid version "{version_str}"')
+    release = match['release']
+    version_info = [int(p) for p in release.split('.')]
+    if release != version_str:
+        version_info.append(version_str[len(release):])
     return tuple(version_info)
 
 
