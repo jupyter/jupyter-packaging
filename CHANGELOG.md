@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.1
+
+- Fix Handling of Skip If Exists [#86](https://github.com/jupyter/jupyter-packaging/pull/86) ([@jtpio](https://github.com/jtpio))
+
 ## 0.10.0
 
 - Add more options to Build [#84](https://github.com/jupyter/jupyter-packaging/pull/84) ([@jtpio](https://github.com/jtpio))
