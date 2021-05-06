@@ -85,7 +85,7 @@ except ImportError:
 setup(cmdclass=cmdclass))
 ```
 
-The optional `tool.jupyter-packaing.options` section accepts the following options:
+The optional `tool.jupyter-packaging.options` section accepts the following options:
 
 - `skip-if-exists`: A list of local files whose presence causes the prebuild to skip
 - `ensured-targets`: A list of local file paths that should exist when the dist commands are run
