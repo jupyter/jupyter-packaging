@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.0
+
+- Add more options to Build [#84](https://github.com/jupyter/jupyter-packaging/pull/84) ([@jtpio](https://github.com/jtpio))
+
 ## 0.9.2
 
 * Clean up handling of version info [#82](https://github.com/jupyter/jupyter-packaging/pull/82) ([@jtpio](https://github.com/jtpio))
