@@ -78,7 +78,7 @@ else:
 # Core Functions
 # ---------------------------------------------------------------------------
 
-def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dist=None, ensured_targets=None):
+def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dist=None, ensured_targets=None, skip_if_exists=None):
     """Make a setuptools cmdclass that calls a prebuild function before installing.
 
     Parameters
@@ -93,6 +93,8 @@ def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dis
         The function to call after the sdist and wheel commands.
     ensured_targets: list
         A list of local file paths that should exist when the dist commands are run
+    skip_if_exists: list
+        A list of local files whose presence causes the prebuild to skip
 
     Notes
     -----
@@ -120,16 +122,20 @@ def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dis
 
     cmdclass['ensure_targets'] = ensure_targets(ensured_targets or [])
 
+    skip_if_exists = skip_if_exists or []
+    should_skip = all(Path(path).exists() for path in skip_if_exists)
+
     def _make_wrapper(klass, pre_build, post_build):
         class _Wrapped(klass):
             def run(self):
-                if pre_build:
+                if pre_build and not should_skip:
                     self.run_command(pre_build.__name__)
                 if klass != develop:
                     self.run_command('ensure_targets')
                 klass.run(self)
-                if post_build:
+                if post_build and not should_skip:
                     self.run_command(post_build.__name__)
+
         cmdclass[klass.__name__] = _Wrapped
 
     if pre_develop or post_develop:
@@ -170,6 +176,7 @@ def npm_builder(path=None, build_dir=None, source_dir=None, build_cmd='build',
         if skip_npm:
             log.info('Skipping npm-installation')
             return
+
         node_package = path or os.path.abspath(os.getcwd())
         node_modules = pjoin(node_package, 'node_modules')
         is_yarn = os.path.exists(pjoin(node_package, 'yarn.lock'))
@@ -199,6 +206,7 @@ def npm_builder(path=None, build_dir=None, source_dir=None, build_cmd='build',
             run(npm_cmd + ['install'], cwd=node_package)
             if build_cmd:
                 run(npm_cmd + ['run', build_cmd], cwd=node_package)
+
     return builder
 
 # ---------------------------------------------------------------------------
