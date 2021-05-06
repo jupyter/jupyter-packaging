@@ -122,8 +122,8 @@ def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dis
 
     cmdclass['ensure_targets'] = ensure_targets(ensured_targets or [])
 
-    skip_if_exists = skip_if_exists or []
-    should_skip = all(Path(path).exists() for path in skip_if_exists)
+    skips = skip_if_exists or []
+    should_skip = skips and all(Path(path).exists() for path in skips)
 
     def _make_wrapper(klass, pre_build, post_build):
         class _Wrapped(klass):
