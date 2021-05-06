@@ -10,7 +10,7 @@ NAME = "jupyter_packaging_test_foo"
 PACKAGE_JSON = json.dumps(dict(
     name="foo",
     version="0.1.0",
-    scripts=dict(build=f"touch {NAME}/generated.js")
+    scripts=dict(build=f"echo $(DATE) > {NAME}/generated.js")
 ))
 
 
@@ -49,7 +49,7 @@ packages = find:
 python_requires = >=3.6
 """.format(name=name)
 
-setup_maker = lambda name=NAME, data_files_spec=None, pre_dist=None, ensured_targets=None, **kwargs: """
+setup_maker = lambda name=NAME, data_files_spec=None, pre_dist=None, ensured_targets=None, skip_if_exists=None, **kwargs: """
 from jupyter_packaging import get_data_files, wrap_installers, npm_builder
 import setuptools
 import os
@@ -59,7 +59,7 @@ def exclude(filename):
 
 data_files=get_data_files({data_files_spec}, exclude=exclude)
 
-cmdclass = wrap_installers(pre_dist={pre_dist}, ensured_targets={ensured_targets})
+cmdclass = wrap_installers(pre_dist={pre_dist}, ensured_targets={ensured_targets}, skip_if_exists={skip_if_exists})
 
 setuptools.setup(data_files=data_files, cmdclass=cmdclass, {setup_args})
 """.format(
@@ -67,6 +67,7 @@ setuptools.setup(data_files=data_files, cmdclass=cmdclass, {setup_args})
     data_files_spec=data_files_spec,
     pre_dist=pre_dist or 'lambda: print',
     ensured_targets=ensured_targets or [],
+    skip_if_exists=skip_if_exists or [],
     setup_args="".join(['{}={},\n\t'.format(key, str(val)) for key, val in kwargs.items()])
 )
 
@@ -96,6 +97,7 @@ def make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker, include_
         data_files=None,
         data_files_spec=None,
         ensured_targets=None,
+        skip_if_exists=None,
         py_module=False
     ):
         # Create the package directory.
@@ -129,6 +131,7 @@ def make_package_base(tmp_path, pyproject_toml, setup_func=setup_maker, include_
             name=name,
             data_files_spec=data_files_spec,
             ensured_targets=ensured_targets,
+            skip_if_exists=skip_if_exists,
             pre_dist=pre_dist,
             **setup_args
         )

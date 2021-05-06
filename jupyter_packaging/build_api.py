@@ -23,7 +23,9 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     builder = _get_build_func()
     if builder:
         builder()
-    return orig_build_wheel(wheel_directory, config_settings=config_settings, metadata_directory=metadata_directory)
+    val = orig_build_wheel(wheel_directory, config_settings=config_settings, metadata_directory=metadata_directory)
+    _ensure_targets()
+    return val
 
 
 def build_sdist(sdist_directory, config_settings=None):
@@ -31,7 +33,9 @@ def build_sdist(sdist_directory, config_settings=None):
     builder = _get_build_func()
     if builder:
         builder()
-    return orig_build_sdist(sdist_directory, config_settings=config_settings)
+    val = orig_build_sdist(sdist_directory, config_settings=config_settings)
+    _ensure_targets()
+    return val
 
 
 @deprecated(deprecated_in="0.8", removed_in="1.0", current_version=__version__,
@@ -65,6 +69,11 @@ def _get_build_func():
     factory_data = section['builder']['factory']
     mod_name, _, factory_name = factory_data.rpartition('.')
 
+    if 'options' in section and 'skip-if-exists' in section['options']:
+        skip_if_exists = section['options']['skip-if-exists']
+        if all(Path(path).exists() for path in skip_if_exists):
+            return None
+
     # If the module fails to import, try importing as a local script
     try:
         mod = importlib.import_module(mod_name)
@@ -78,3 +87,20 @@ def _get_build_func():
     factory = getattr(mod, factory_name)
     kwargs = section.get('build-args', {})
     return factory(**kwargs)
+
+
+def _ensure_targets():
+    pyproject = Path('pyproject.toml')
+    if not pyproject.exists():
+        return
+    data = tomlkit.loads(pyproject.read_text(encoding='utf-8'))
+    if 'tool' not in data:
+        return
+    if 'jupyter-packaging' not in data['tool']:
+        return
+    section = data['tool']['jupyter-packaging']
+    if 'options' in section and 'ensured-targets' in section['options']:
+        targets = section['options']['ensured-targets']
+        missing = [t for t in targets if not os.path.exists(t)]
+        if missing:
+            raise ValueError(('missing files: %s' % missing))

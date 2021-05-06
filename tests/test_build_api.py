@@ -26,6 +26,16 @@ BAD_CONTENT = """
 bar = "foo.main"
 """
 
+ENSURED_CONTENT = """
+[tool.jupyter-packaging.options]
+ensured-targets = ["foo.txt"]
+"""
+
+SKIP_IF_EXISTS = """
+[tool.jupyter-packaging.options]
+skip-if-exists = ["foo.txt"]
+"""
+
 
 def test_build_wheel_no_toml(tmp_path):
     os.chdir(tmp_path)
@@ -37,10 +47,16 @@ def test_build_wheel_no_toml(tmp_path):
 def test_build_wheel(tmp_path, mocker):
     os.chdir(tmp_path)
     tmp_path.joinpath('foo.py').write_text(FOO_CONTENT)
-    tmp_path.joinpath('pyproject.toml').write_text(TOML_CONTENT, encoding='utf-8')
+    tmp_path.joinpath('pyproject.toml').write_text(TOML_CONTENT + ENSURED_CONTENT, encoding='utf-8')
     orig_wheel = mocker.patch('jupyter_packaging.build_api.orig_build_wheel')
     build_wheel(tmp_path)
     orig_wheel.assert_called_with(tmp_path, config_settings=None, metadata_directory=None)
+    data = tmp_path.joinpath('foo.txt').read_text(encoding='utf-8')
+    assert data == 'fizz=buzz'
+
+    content = TOML_CONTENT.replace("buzz", "fizz") + SKIP_IF_EXISTS
+    tmp_path.joinpath('pyproject.toml').write_text(content, encoding='utf-8')
+    build_wheel(tmp_path)
     data = tmp_path.joinpath('foo.txt').read_text(encoding='utf-8')
     assert data == 'fizz=buzz'
 
@@ -65,7 +81,7 @@ def test_build_wheel_no_toml(tmp_path, mocker):
 def test_build_sdist(tmp_path, mocker):
     os.chdir(tmp_path)
     tmp_path.joinpath('foo.py').write_text(FOO_CONTENT)
-    tmp_path.joinpath('pyproject.toml').write_text(TOML_CONTENT, encoding='utf-8')
+    tmp_path.joinpath('pyproject.toml').write_text(TOML_CONTENT + ENSURED_CONTENT, encoding='utf-8')
     orig_sdist = mocker.patch('jupyter_packaging.build_api.orig_build_sdist')
     build_sdist(tmp_path)
     orig_sdist.assert_called_with(tmp_path, config_settings=None)
