@@ -9,6 +9,7 @@ Tools to help build and install Jupyter Python packages that require a pre-build
 ## Usage
 
 There are three ways to use `jupyter-packaging` in another package.
+In general, you should not depend on `jupyter_packaging` as a runtime dependency, only as a build dependency.
 
 ### As a Build Requirement
 
@@ -17,7 +18,7 @@ An example:
 
 ```toml
 [build-system]
-requires = ["jupyter_packaging~=0.9.0,<2"]
+requires = ["jupyter_packaging~=0.10.0,<2"]
 build-backend = "setuptools.build_meta"
 ```
 
@@ -46,7 +47,7 @@ The pre-build command is specified as metadata in `pyproject.toml`:
 
 ```toml
 [build-system]
-requires = ["jupyter_packaging~=0.8.0"]
+requires = ["jupyter_packaging~=0.10.0,<2"]
 build-backend = "jupyter_packaging.build_api"
 
 [tool.jupyter-packaging.builder]
@@ -108,7 +109,6 @@ setup(cmdclass=cmdclass)
 - Tools like [`check-manifest`](https://github.com/mgedmin/check-manifest) or [`manifix`](https://github.com/vidartf/manifix) can be used to ensure the desired assets are included.
 - Simple uses of `data_files` can be handled in `setup.cfg` or in `setup.py`.  If recursive directories are needed use `get_data_files()` from this package.
 - Unfortunately `data_files` are not supported in `develop` mode (a limitation of `setuptools`).  You can work around it by doing a full install (`pip install .`) before the develop install (`pip install -e .`), or by adding a script to push the data files to `sys.base_prefix`.
-
 
 ## Development Install
 
