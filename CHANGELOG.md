@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.2
+
+- Fix Handling of npm Parameter [#90](https://github.com/jupyter/jupyter-packaging/pull/90) ([@jtpio](https://github.com/jtpio))
+
 ## 0.10.1
 
 - Fix Handling of Skip If Exists [#86](https://github.com/jupyter/jupyter-packaging/pull/86) ([@jtpio](https://github.com/jtpio))
