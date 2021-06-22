@@ -45,7 +45,7 @@ long_description_content_type="text/markdown",
 [options]
 zip_safe = False
 include_package_data = True
-packages = find:
+py_modules = foo
 python_requires = >=3.6
 """.format(name=name)
 
