@@ -1,6 +1,7 @@
 import json
 import os
 import pathlib
+import sys
 from pytest import fixture
 from subprocess import run
 
@@ -16,7 +17,7 @@ PACKAGE_JSON = json.dumps(dict(
 
 @fixture(scope="session", autouse=True)
 def clear_pip_cache():
-    run(['python', '-m', 'pip', 'cache', 'remove', 'jupyter_packaging'])
+    run([sys.executable, '-m', 'pip', 'cache', 'remove', 'jupyter_packaging'])
 
 
 @fixture

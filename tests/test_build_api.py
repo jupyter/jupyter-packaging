@@ -1,4 +1,5 @@
 import os
+import sys
 from subprocess import check_call
 from unittest.mock import patch, call
 
@@ -114,7 +115,7 @@ def test_build_package(make_package):
     text += TOML_CONTENT
     pyproject.write_text(text, encoding='utf-8')
     package_dir.joinpath('foo.py').write_text(FOO_CONTENT, encoding='utf-8')
-    check_call(['python', '-m', 'build'], cwd=package_dir)
+    check_call([sys.executable, '-m', 'build'], cwd=package_dir)
     data = package_dir.joinpath('foo.txt').read_text(encoding='utf-8')
     assert data == 'fizz=buzz'
 
@@ -128,6 +129,6 @@ def test_deprecated_metadata(make_package):
     text = text.replace('factory =', 'func =')
     pyproject.write_text(text, encoding='utf-8')
     package_dir.joinpath('foo.py').write_text(FOO_CONTENT, encoding='utf-8')
-    check_call(['python', '-m', 'build'], cwd=package_dir)
+    check_call([sys.executable, '-m', 'build'], cwd=package_dir)
     data = package_dir.joinpath('foo.txt').read_text(encoding='utf-8')
     assert data == 'fizz=buzz'
