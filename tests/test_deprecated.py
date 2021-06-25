@@ -1,5 +1,6 @@
 
 import os
+import sys
 from unittest.mock import patch
 
 from deprecation import fail_if_not_removed
@@ -52,12 +53,19 @@ def test_finds_only_direct_subpackages(tmpdir):
         assert expected == pkg.find_packages(str(tmpdir))
 
 
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="Not compatible with Python 3.10+")
 def test_ensure_python():
     pkg.ensure_python('>=3.6')
     pkg.ensure_python(['>=3.6', '>=3.5'])
 
     with pytest.raises(ValueError):
         pkg.ensure_python('<3.5')
+
+
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="Tests RuntimeError for Python 3.10+")
+def test_ensure_python_310():
+    with pytest.raises(RuntimeError):
+        pkg.ensure_python('>=3.6')
 
 
 def test_create_cmdclass(make_package_deprecated, mocker):

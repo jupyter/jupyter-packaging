@@ -459,6 +459,8 @@ def command_for_func(func):
 def ensure_python(specs):
     """Given a list of range specifiers for python, ensure compatibility.
     """
+    if sys.version_info >= (3, 10):
+        raise RuntimeError("ensure_python is deprecated and not compatible with Python 3.10+")
     if not isinstance(specs, (list, tuple)):
         specs = [specs]
     v = sys.version_info
