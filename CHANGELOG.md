@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.3
+
+- Some fixes for issues discovered during packaging [#96](https://github.com/jupyter/jupyter-packaging/pull/96) ([@frenzymadness](https://github.com/frenzymadness))
+- Disallow deprecated function return incorrect results for Python 3.10 [#97](https://github.com/jupyter/jupyter-packaging/pull/97) ([@frenzymadness](https://github.com/frenzymadness))
+- Fix handling of module metadata in tests [#92](https://github.com/jupyter/jupyter-packaging/pull/92) ([@blink1073](https://github.com/blink1073))
+
 ## 0.10.2
 
 - Fix Handling of npm Parameter [#90](https://github.com/jupyter/jupyter-packaging/pull/90) ([@jtpio](https://github.com/jtpio))
