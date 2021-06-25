@@ -1,6 +1,7 @@
 
 from unittest.mock import patch
 import pytest
+import sys
 
 from setuptools.dist import Distribution
 from jupyter_packaging.setupbase import __file__ as path
@@ -28,7 +29,7 @@ def test_combine_commands():
 
 
 def test_run():
-    assert pkg.run('python --version') == 0
+    assert pkg.run(sys.executable + ' --version') == 0
 
     with pytest.raises(ValueError):
         pkg.run('foobarbaz')
