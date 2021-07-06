@@ -58,6 +58,19 @@ def test_npm_builder_yarn(tmp_path, mocker):
     ])
 
 
+def test_npm_builder_missing_yarn(tmp_path, mocker):
+    which = mocker.patch('jupyter_packaging.setupbase.which')
+    run = mocker.patch('jupyter_packaging.setupbase.run')
+    tmp_path.joinpath('yarn.lock').write_text('hello')
+    builder = npm_builder(path=tmp_path)
+    which.side_effect = ['', 'foo']
+    builder()
+    run.assert_has_calls([
+        call(['npm', 'install'], cwd=tmp_path),
+        call(['npm', 'run', 'build'], cwd=tmp_path)
+    ])
+
+
 def test_npm_builder_not_stale(tmp_path, mocker):
     which = mocker.patch('jupyter_packaging.setupbase.which')
     run = mocker.patch('jupyter_packaging.setupbase.run')

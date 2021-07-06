@@ -178,7 +178,11 @@ def npm_builder(path=None, build_dir=None, source_dir=None, build_cmd='build',
 
         node_package = path or os.path.abspath(os.getcwd())
         node_modules = pjoin(node_package, 'node_modules')
+
         is_yarn = os.path.exists(pjoin(node_package, 'yarn.lock'))
+        if is_yarn and not which('yarn'):
+            log.warn('yarn not found, ignoring yarn.lock file')
+            is_yarn = False
 
         npm_cmd = npm
 
