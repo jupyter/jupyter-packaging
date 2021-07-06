@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.4
+
+- Handle missing yarn [#99](https://github.com/jupyter/jupyter-packaging/pull/99) ([@blink1073](https://github.com/blink1073))
+
 ## 0.10.3
 
 - Some fixes for issues discovered during packaging [#96](https://github.com/jupyter/jupyter-packaging/pull/96) ([@frenzymadness](https://github.com/frenzymadness))
