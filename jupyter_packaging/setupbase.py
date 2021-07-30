@@ -258,7 +258,7 @@ def run(cmd, **kwargs):
     log.info('> ' + list2cmdline(cmd))
     kwargs.setdefault('shell', os.name == 'nt')
     if not isinstance(cmd, (list, tuple)):
-        cmd = shlex.split(cmd)
+        cmd = shlex.split(cmd, posix=os.name!='nt')
     if not os.path.isabs(cmd[0]):
         # If a command is not an absolute path find it first.
         cmd_path = which(cmd[0])
