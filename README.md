@@ -105,6 +105,7 @@ setup(cmdclass=cmdclass)
 
 ## Usage Notes
 
+- This package does not work with the deprecated `python setup.py bdist_wheel` or `python setup.py sdist` commands, PyPA recommends using the [build](https://pypa-build.readthedocs.io/en/latest/index.html) package (`pip install build && python -m build .`).
 - We recommend using `include_package_data=True` and `MANIFEST.in` to control the assets included in the [package](https://setuptools.readthedocs.io/en/latest/userguide/datafiles.html).
 - Tools like [`check-manifest`](https://github.com/mgedmin/check-manifest) or [`manifix`](https://github.com/vidartf/manifix) can be used to ensure the desired assets are included.
 - Simple uses of `data_files` can be handled in `setup.cfg` or in `setup.py`.  If recursive directories are needed use `get_data_files()` from this package.
