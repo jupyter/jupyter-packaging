@@ -87,3 +87,8 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# ms IDE stuff
+*.code-workspace
+.history
+.vscode
