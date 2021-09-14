@@ -142,7 +142,8 @@ def wrap_installers(pre_develop=None, pre_dist=None, post_develop=None, post_dis
 
     if pre_dist or post_dist or ensured_targets:
         _make_wrapper(sdist, pre_dist, post_dist)
-        _make_wrapper(bdist_wheel, pre_dist, post_dist)
+        if bdist_wheel:
+            _make_wrapper(bdist_wheel, pre_dist, post_dist)
 
     return cmdclass
 
