@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.5
+
+- Fix last one hardcoded unversioned python command [#98](https://github.com/jupyter/jupyter-packaging/pull/98) ([@frenzymadness](https://github.com/frenzymadness))
+- Add note about using the build package [#104](https://github.com/jupyter/jupyter-packaging/pull/104) ([@blink1073](https://github.com/blink1073))
+
 ## 0.10.4
 
 - Handle missing yarn [#99](https://github.com/jupyter/jupyter-packaging/pull/99) ([@blink1073](https://github.com/blink1073))
