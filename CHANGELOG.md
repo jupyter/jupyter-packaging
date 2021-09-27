@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.6
+
+- The import of `bdist_wheel` is optional, must check for `None` before using it [#106](https://github.com/jupyter/jupyter-packaging/pull/106) ([@ellert](https://github.com/ellert))
+
 ## 0.10.5
 
 - Fix last one hardcoded unversioned python command [#98](https://github.com/jupyter/jupyter-packaging/pull/98) ([@frenzymadness](https://github.com/frenzymadness))
