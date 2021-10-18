@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.0
+
+- Drop support for Python 3.6 and add support for Python 3.10. [#109](https://github.com/jupyter/jupyter-packaging/pull/109) ([@blink1073](https://github.com/blink1073))
+
 ## 0.10.6
 
 - The import of `bdist_wheel` is optional, must check for `None` before using it [#106](https://github.com/jupyter/jupyter-packaging/pull/106) ([@ellert](https://github.com/ellert))
