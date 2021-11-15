@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.1
+
+- Fix running testsuite within virtualenv [#111](https://github.com/jupyter/jupyter-packaging/pull/111) ([@jnahmias](https://github.com/jnahmias))
+
 ## 0.11.0
 
 - Drop support for Python 3.6 and add support for Python 3.10. [#109](https://github.com/jupyter/jupyter-packaging/pull/109) ([@blink1073](https://github.com/blink1073))
