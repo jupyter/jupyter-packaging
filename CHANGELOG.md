@@ -1,8 +1,12 @@
 # Changelog
 
+<!-- <START NEW CHANGELOG ENTRY> -->
+
 ## 0.11.1
 
 - Fix running testsuite within virtualenv [#111](https://github.com/jupyter/jupyter-packaging/pull/111) ([@jnahmias](https://github.com/jnahmias))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.11.0
 
