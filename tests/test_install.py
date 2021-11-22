@@ -1,4 +1,3 @@
-import os
 import subprocess
 import shutil
 from pathlib import Path
@@ -11,7 +10,10 @@ def test_install(make_package, tmp_path):
     name = 'jupyter_packaging_test_foo'
     ensured_targets=[f'{name}/main.py']
     package_dir = make_package(name=name, ensured_targets=ensured_targets)
-    subprocess.check_output([shutil.which('pip'), 'install', '.'], cwd=str(package_dir))
+    try:
+        subprocess.check_output([shutil.which('pip'), 'install', '.'], cwd=str(package_dir))
+    except subprocess.CalledProcessError:
+        pytest.skip("Unable to write to site packages")
     # Get site packages where the package is installed.
     sitepkg = Path(sysconfig.get_paths()["purelib"])
     installed_file = sitepkg / f"{name}/main.py"
@@ -26,7 +28,10 @@ def test_install_hybrid(make_hybrid_package, tmp_path):
     name = 'jupyter_packaging_test_foo'
     ensured_targets = [f"{name}/main.py", f"{name}/generated.js"]
     package_dir = make_hybrid_package(name=name, ensured_targets=ensured_targets, skip_if_exists=[f"{name}/generated.js"])
-    subprocess.check_output([shutil.which('pip'), 'install', '.'], cwd=str(package_dir))
+    try:
+        subprocess.check_output([shutil.which('pip'), 'install', '.'], cwd=str(package_dir))
+    except subprocess.CalledProcessError:
+        pytest.skip("Unable to write to site packages")
     # Get site packages where the package is installed.
     sitepkg = Path(sysconfig.get_paths()["purelib"])
     installed_py_file = sitepkg / f"{name}/main.py"
@@ -49,5 +54,5 @@ def test_install_missing(make_package, tmp_path):
     ensured_targets=[f'{name}/missing.py']
     package_dir = make_package(name=name, ensured_targets=ensured_targets)
     with pytest.raises(subprocess.CalledProcessError):
-        subprocess.check_output([shutil.which('pip'), 'install', '.'], cwd=str(package_dir))
-    subprocess.check_output([shutil.which('pip'), 'install', '-e', '.'], cwd=str(package_dir))
+        subprocess.check_output([shutil.which('pip'), 'install', '--user', '.'], cwd=str(package_dir))
+    subprocess.check_output([shutil.which('pip'), 'install', '--user', '-e', '.'], cwd=str(package_dir))

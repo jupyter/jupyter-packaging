@@ -66,7 +66,10 @@ def test_develop(make_package_deprecated, source,spec,target):
     target_path = pathlib.Path(sys.prefix).joinpath(target)
     if target_path.exists():
         shutil.rmtree(str(target_path.parent))
-    subprocess.check_output([shutil.which('pip'), 'install', '-e', '.'], cwd=str(package_dir))
+    try:
+        subprocess.check_output([shutil.which('pip'), 'install', '-e', '.'], cwd=str(package_dir))
+    except subprocess.CalledProcessError:
+        pytest.skip("Unable to write to site packages")
     assert target_path.exists()
     subprocess.check_output([shutil.which('pip'), 'uninstall', '-y', name], cwd=str(package_dir))
     # This is something to fix later. uninstalling a package installed
@@ -85,7 +88,10 @@ def test_install(make_package, source,spec,target):
     target_path = pathlib.Path(sys.prefix).joinpath(target)
     if target_path.exists():
         shutil.rmtree(str(target_path.parent))
-    subprocess.check_output([shutil.which('pip'), 'install', '.'], cwd=str(package_dir))
+    try:
+        subprocess.check_output([shutil.which('pip'), 'install', '.'], cwd=str(package_dir))
+    except subprocess.CalledProcessError:
+        pytest.skip("Unable to write to site packages")
     assert target_path.exists()
     subprocess.check_output([shutil.which('pip'), 'uninstall', '-y', name], cwd=str(package_dir))
     assert not target_path.exists()
