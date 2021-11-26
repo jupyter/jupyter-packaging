@@ -7,7 +7,7 @@ from setuptools.dist import Distribution
 from jupyter_packaging.setupbase import __file__ as path
 import jupyter_packaging.setupbase as pkg
 
-from utils import run_command
+from .utils import run_command
 
 def test_get_version():
     version = pkg.get_version(path)
