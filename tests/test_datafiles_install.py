@@ -8,6 +8,7 @@ import sys
 
 from deprecation import fail_if_not_removed
 
+from .utils import site_packages_readonly
 
 
 data_files_combinations = [
@@ -55,6 +56,7 @@ data_files_combinations = [
 ]
 
 
+@pytest.mark.skipif(site_packages_readonly, reason='Site Packages are Read-only')
 @fail_if_not_removed
 @pytest.mark.parametrize(
     'source,spec,target',
@@ -66,18 +68,16 @@ def test_develop(make_package_deprecated, source,spec,target):
     target_path = pathlib.Path(sys.prefix).joinpath(target)
     if target_path.exists():
         shutil.rmtree(str(target_path.parent))
-    try:
-        subprocess.check_output([shutil.which('pip'), 'install', '-e', '.'], cwd=str(package_dir))
-    except subprocess.CalledProcessError:
-        pytest.skip("Unable to write to site packages")
+    subprocess.check_output([sys.executable, '-m', 'pip', 'install', '-e', '.'], cwd=str(package_dir))
     assert target_path.exists()
-    subprocess.check_output([shutil.which('pip'), 'uninstall', '-y', name], cwd=str(package_dir))
+    subprocess.check_output([sys.executable, '-m', 'pip', 'uninstall', '-y', name], cwd=str(package_dir))
     # This is something to fix later. uninstalling a package installed
-    # with -e should ne removed.
+    # with -e should be removed.
     assert target_path.exists()
     shutil.rmtree(str(target_path.parent))
 
 
+@pytest.mark.skipif(site_packages_readonly, reason='Site Packages are Read-only')
 @pytest.mark.parametrize(
     'source,spec,target',
     data_files_combinations
@@ -88,10 +88,7 @@ def test_install(make_package, source,spec,target):
     target_path = pathlib.Path(sys.prefix).joinpath(target)
     if target_path.exists():
         shutil.rmtree(str(target_path.parent))
-    try:
-        subprocess.check_output([shutil.which('pip'), 'install', '.'], cwd=str(package_dir))
-    except subprocess.CalledProcessError:
-        pytest.skip("Unable to write to site packages")
+    subprocess.check_output([sys.executable, '-m', 'pip', 'install', '.'], cwd=str(package_dir))
     assert target_path.exists()
-    subprocess.check_output([shutil.which('pip'), 'uninstall', '-y', name], cwd=str(package_dir))
+    subprocess.check_output([sys.executable, '-m', 'pip', 'uninstall', '-y', name], cwd=str(package_dir))
     assert not target_path.exists()

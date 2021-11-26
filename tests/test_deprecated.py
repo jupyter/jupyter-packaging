@@ -10,6 +10,7 @@ from setuptools.dist import Distribution
 
 import jupyter_packaging.setupbase as pkg
 
+from .utils import site_packages_readonly
 
 here = os.path.dirname(__file__)
 root = os.path.join(here, os.pardir)
@@ -18,7 +19,7 @@ root = os.path.join(here, os.pardir)
 @fail_if_not_removed
 def test_finds_itself():
     with pytest.warns(DeprecationWarning):
-        assert ['jupyter_packaging'] == pkg.find_packages(root)
+        assert 'jupyter_packaging' in pkg.find_packages(root)
 
 
 def test_finds_subpackages(tmpdir):
@@ -68,6 +69,7 @@ def test_ensure_python_310():
         pkg.ensure_python('>=3.6')
 
 
+@pytest.mark.skipif(site_packages_readonly, reason='Site Packages are Read-only')
 def test_create_cmdclass(make_package_deprecated, mocker):
     source = ("share/test.txt",)
     spec =  ("jupyter-packaging-test", "share", "**/*")
