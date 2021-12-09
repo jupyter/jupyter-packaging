@@ -18,7 +18,7 @@ An example:
 
 ```toml
 [build-system]
-requires = ["jupyter_packaging~=0.10.0"]
+requires = ["jupyter_packaging>=0.10,<2"]
 build-backend = "setuptools.build_meta"
 ```
 
@@ -47,7 +47,7 @@ The pre-build command is specified as metadata in `pyproject.toml`:
 
 ```toml
 [build-system]
-requires = ["jupyter_packaging~=0.10.0"]
+requires = ["jupyter_packaging>=0.10,<2"]
 build-backend = "jupyter_packaging.build_api"
 
 [tool.jupyter-packaging.builder]
