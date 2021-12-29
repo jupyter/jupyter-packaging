@@ -12,6 +12,7 @@ from collections import defaultdict
 from os.path import join as pjoin
 from pathlib import Path
 import io
+import logging
 import os
 import functools
 import pipes
@@ -36,8 +37,6 @@ from setuptools import Command
 from setuptools.command.build_py import build_py
 from setuptools.config import StaticModule
 
-# Note: distutils must be imported after setuptools
-from distutils import log
 
 from setuptools.command.sdist import sdist
 from setuptools.command.develop import develop
@@ -64,6 +63,8 @@ __version__ = '0.11.1'
 SEPARATORS = os.sep if os.altsep is None else os.sep + os.altsep
 VERSION_REGEX = re.compile(r"^\s*" + VERSION_PATTERN + r"\s*$", re.VERBOSE | re.IGNORECASE)
 
+
+log = logging.getLogger(__name__)
 
 if "--skip-npm" in sys.argv:
     print("Skipping npm install as requested.")
