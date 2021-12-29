@@ -13,7 +13,7 @@ def mock_dist():
     ))
 
 def run_command(cmd):
-    """Run a distutils/setuptools Command """
+    """Run a setuptools Command """
     dist = mock_dist()
     instance = cmd(dist)
     instance.initialize_options()

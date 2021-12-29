@@ -28,8 +28,6 @@ except ImportError:
     # shim deprecated to allow setuptools to find the version string in this file
     deprecated = lambda *args, **kwargs: lambda *args, **kwargs: None
 
-# BEFORE importing distutils, remove MANIFEST. distutils doesn't properly
-# update it when the contents of directories change.
 if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 
 from packaging.version import VERSION_PATTERN
