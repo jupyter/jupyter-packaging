@@ -2,7 +2,6 @@
 # Distributed under the terms of the Modified BSD License.
 import importlib
 from pathlib import Path
-import os
 import sys
 
 from deprecation import deprecated
@@ -79,7 +78,7 @@ def _get_build_func():
         mod = importlib.import_module(mod_name)
     except ImportError:
         try:
-            sys.path.insert(0, os.getcwd())
+            sys.path.insert(0, str(Path.cwd()))
             mod = importlib.import_module(mod_name)
         finally:
             sys.path.pop(0)
@@ -101,6 +100,6 @@ def _ensure_targets():
     section = data['tool']['jupyter-packaging']
     if 'options' in section and 'ensured-targets' in section['options']:
         targets = section['options']['ensured-targets']
-        missing = [t for t in targets if not os.path.exists(t)]
+        missing = [t for t in targets if not Path(t).exists()]
         if missing:
             raise ValueError(('missing files: %s' % missing))

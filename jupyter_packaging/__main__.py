@@ -8,32 +8,36 @@ If no directory is given, it uses the current directory.
 """
 
 import argparse
-import os
 import shutil
+from pathlib import Path
+from typing import Union
 
 
-def check_dir(dirpath):
-    if not os.path.isdir(dirpath):
-        raise argparse.ArgumentTypeError(
-            'Given path is not a directory: %s' % dirpath)
-    return os.path.abspath(dirpath)
+def check_dir(dirpath: Union[Path, str]) -> Path:
+    dirpath = Path(dirpath)
+    if not dirpath.is_dir():
+        raise argparse.ArgumentTypeError(f"Given path is not a directory: {dirpath!s}")
+    return dirpath.resolve()
 
 
 def main(args=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        'destination', type=check_dir, default='.', nargs='?',
+        "destination",
+        type=check_dir,
+        default=".",
+        nargs="?",
         help="The directory to copy setupbase.py to.",
-        )
+    )
 
     args = parser.parse_args(args)
 
-    here = os.path.dirname(__file__)
-    source = os.path.join(here, 'setupbase.py')
+    here = Path(__file__)
+    source = here / "setupbase.py"
     destination = args.destination
 
-    shutil.copy(source, destination)
+    shutil.copy(str(source), destination)
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     main()
