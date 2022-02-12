@@ -22,7 +22,11 @@ def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     builder = _get_build_func()
     if builder:
         builder()
-    val = orig_build_wheel(wheel_directory, config_settings=config_settings, metadata_directory=metadata_directory)
+    val = orig_build_wheel(
+        wheel_directory,
+        config_settings=config_settings,
+        metadata_directory=metadata_directory,
+    )
     _ensure_targets()
     return val
 
@@ -37,39 +41,43 @@ def build_sdist(sdist_directory, config_settings=None):
     return val
 
 
-@deprecated(deprecated_in="0.8", removed_in="1.0", current_version=__version__,
-            details="Use `factory =` instead")
+@deprecated(
+    deprecated_in="0.8",
+    removed_in="1.0",
+    current_version=__version__,
+    details="Use `factory =` instead",
+)
 def _handle_deprecated_metadata():
     pass
 
 
 def _get_build_func():
-    pyproject = Path('pyproject.toml')
+    pyproject = Path("pyproject.toml")
     if not pyproject.exists():
         return
-    data = tomlkit.loads(pyproject.read_text(encoding='utf-8'))
-    if 'tool' not in data:
+    data = tomlkit.loads(pyproject.read_text(encoding="utf-8"))
+    if "tool" not in data:
         return
-    if 'jupyter-packaging' not in data['tool']:
+    if "jupyter-packaging" not in data["tool"]:
         return
-    if 'builder' not in data['tool']['jupyter-packaging']:
+    if "builder" not in data["tool"]["jupyter-packaging"]:
         return
-    section = data['tool']['jupyter-packaging']
+    section = data["tool"]["jupyter-packaging"]
 
     # Handle deprecated "func" builder kwarg
-    if 'func' in section['builder']:
+    if "func" in section["builder"]:
         _handle_deprecated_metadata()
-        if not 'factory' in section['builder']:
-            section['builder']['factory'] = section['builder']['func']
+        if not "factory" in section["builder"]:
+            section["builder"]["factory"] = section["builder"]["func"]
 
-    if 'factory' not in section['builder']:
-        raise ValueError('Missing `factory` specifier for builder')
+    if "factory" not in section["builder"]:
+        raise ValueError("Missing `factory` specifier for builder")
 
-    factory_data = section['builder']['factory']
-    mod_name, _, factory_name = factory_data.rpartition('.')
+    factory_data = section["builder"]["factory"]
+    mod_name, _, factory_name = factory_data.rpartition(".")
 
-    if 'options' in section and 'skip-if-exists' in section['options']:
-        skip_if_exists = section['options']['skip-if-exists']
+    if "options" in section and "skip-if-exists" in section["options"]:
+        skip_if_exists = section["options"]["skip-if-exists"]
         if all(Path(path).exists() for path in skip_if_exists):
             return None
 
@@ -84,22 +92,22 @@ def _get_build_func():
             sys.path.pop(0)
 
     factory = getattr(mod, factory_name)
-    kwargs = section.get('build-args', {})
+    kwargs = section.get("build-args", {})
     return factory(**kwargs)
 
 
 def _ensure_targets():
-    pyproject = Path('pyproject.toml')
+    pyproject = Path("pyproject.toml")
     if not pyproject.exists():
         return
-    data = tomlkit.loads(pyproject.read_text(encoding='utf-8'))
-    if 'tool' not in data:
+    data = tomlkit.loads(pyproject.read_text(encoding="utf-8"))
+    if "tool" not in data:
         return
-    if 'jupyter-packaging' not in data['tool']:
+    if "jupyter-packaging" not in data["tool"]:
         return
-    section = data['tool']['jupyter-packaging']
-    if 'options' in section and 'ensured-targets' in section['options']:
-        targets = section['options']['ensured-targets']
+    section = data["tool"]["jupyter-packaging"]
+    if "options" in section and "ensured-targets" in section["options"]:
+        targets = section["options"]["ensured-targets"]
         missing = [t for t in targets if not Path(t).exists()]
         if missing:
-            raise ValueError(('missing files: %s' % missing))
+            raise ValueError(("missing files: %s" % missing))
