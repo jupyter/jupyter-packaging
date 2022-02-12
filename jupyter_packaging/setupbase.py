@@ -190,7 +190,7 @@ def npm_builder(
             log.info("Skipping npm-installation")
             return
 
-        node_package = Path(path) or Path.cwd().resolve()
+        node_package = Path(path or Path.cwd().resolve())
 
         is_yarn = (node_package / "yarn.lock").exists()
         if is_yarn and not which("yarn"):
