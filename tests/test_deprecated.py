@@ -1,6 +1,6 @@
-
 import os
 import sys
+from pathlib import Path
 from unittest.mock import patch
 
 from deprecation import fail_if_not_removed
@@ -12,14 +12,14 @@ import jupyter_packaging.setupbase as pkg
 
 from .utils import site_packages_readonly
 
-here = os.path.dirname(__file__)
-root = os.path.join(here, os.pardir)
+here = Path(__file__).parent
+root = here.parent
 
 
 @fail_if_not_removed
 def test_finds_itself():
     with pytest.warns(DeprecationWarning):
-        assert 'jupyter_packaging' in pkg.find_packages(root)
+        assert 'jupyter_packaging' in pkg.find_packages(str(root))
 
 
 def test_finds_subpackages(tmpdir):

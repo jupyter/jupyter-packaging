@@ -1,6 +1,5 @@
-
-import os
 import site
+from pathlib import Path
 
 from setuptools.dist import Distribution
 
@@ -21,12 +20,11 @@ def run_command(cmd):
     return instance.run()
 
 
-site_packages = site.getsitepackages()[0]
+site_packages = Path(site.getsitepackages()[0])
 try:
-    target = os.path.join(site_packages, 'jupyter_packaging_test.txt')
-    with open(target, 'w') as fid:
-        pass
-    os.remove(target)
+    target = site_packages / 'jupyter_packaging_test.txt'
+    site_packages.touch()
+    site_packages.unlink()
     site_packages_readonly = False
 except Exception:
     site_packages_readonly = True

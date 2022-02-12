@@ -1,5 +1,4 @@
 import json
-import os
 import pathlib
 import sys
 from pytest import fixture
@@ -26,11 +25,11 @@ def pyproject_toml():
     with that depend on this package.
     """
     root_path = HERE.joinpath("../..").resolve()
-    return """
+    return f"""
 [build-system]
-requires = ["jupyter_packaging@file://%s"]
+requires = ["jupyter_packaging@file://{root_path.as_posix()}"]
 build-backend = "setuptools.build_meta"
-""" % str(root_path).replace(os.sep, '/')
+"""
 
 setup_cfg_maker = lambda name=NAME: """
 [metadata]
