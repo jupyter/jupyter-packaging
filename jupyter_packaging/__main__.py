@@ -32,7 +32,7 @@ def main(args=None):
 
     args = parser.parse_args(args)
 
-    here = Path(__file__)
+    here = Path(__file__).parent
     source = here / "setupbase.py"
     destination = args.destination
 
