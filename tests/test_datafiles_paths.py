@@ -1,5 +1,3 @@
-import os
-
 from jupyter_packaging.setupbase import get_data_files
 
 def test_empty_relative_path(tmpdir):

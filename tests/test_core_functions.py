@@ -1,7 +1,6 @@
-import os
-from unittest.mock import patch, call
+from pathlib import Path
+from unittest.mock import call
 
-import pytest
 from setuptools.dist import Distribution
 
 from jupyter_packaging.setupbase import npm_builder, wrap_installers
@@ -28,7 +27,7 @@ def test_npm_builder(mocker):
     builder = npm_builder()
     which.return_value = ['foo']
     builder()
-    cwd=os.getcwd()
+    cwd=Path.cwd()
     run.assert_has_calls([
         call(['npm', 'install'], cwd=cwd),
         call(['npm', 'run', 'build'], cwd=cwd)
