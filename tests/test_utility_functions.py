@@ -1,4 +1,3 @@
-
 from unittest.mock import patch
 import pytest
 import sys
@@ -9,6 +8,7 @@ import jupyter_packaging.setupbase as pkg
 
 from .utils import run_command
 
+
 def test_get_version():
     version = pkg.get_version(path)
     assert version == pkg.__version__
@@ -17,6 +17,7 @@ def test_get_version():
 def test_combine_commands():
     class MockCommand(pkg.BaseCommand):
         called = 0
+
         def run(self):
             MockCommand.called += 1
 
@@ -29,21 +30,21 @@ def test_combine_commands():
 
 
 def test_run():
-    assert pkg.run(sys.executable + ' --version') == 0
+    assert pkg.run(sys.executable + " --version") == 0
 
     with pytest.raises(ValueError):
-        pkg.run('foobarbaz')
+        pkg.run("foobarbaz")
 
 
 def test_ensure_existing_targets(destination_dir):
-    local_targets = ['file1.rtf', 'sub/subfile1.rtf']
+    local_targets = ["file1.rtf", "sub/subfile1.rtf"]
     targets = [str(destination_dir.join(t)) for t in local_targets]
     cmd = pkg.ensure_targets(targets)
     run_command(cmd)
 
 
 def test_ensure_missing_targets(source_dir):
-    local_targets = ['file1.rtf', 'sub/subfile1.rtf']
+    local_targets = ["file1.rtf", "sub/subfile1.rtf"]
     targets = [str(source_dir.join(t)) for t in local_targets]
     cmd = pkg.ensure_targets(targets)
     with pytest.raises(ValueError):
@@ -51,8 +52,8 @@ def test_ensure_missing_targets(source_dir):
 
 
 def test_ensure_with_skip_npm(source_dir, mocker):
-    mocker.patch('jupyter_packaging.setupbase.skip_npm', True)
-    local_targets = ['file1.rtf', 'sub/subfile1.rtf']
+    mocker.patch("jupyter_packaging.setupbase.skip_npm", True)
+    local_targets = ["file1.rtf", "sub/subfile1.rtf"]
     targets = [str(source_dir.join(t)) for t in local_targets]
     cmd = pkg.ensure_targets(targets)
     run_command(cmd)
@@ -60,21 +61,22 @@ def test_ensure_with_skip_npm(source_dir, mocker):
 
 class TestCommand(pkg.BaseCommand):
     def run(self):
-      raise RuntimeError()
+        raise RuntimeError()
+
 
 # Prevent pytest from trying to collect TestCommand as a test:
 TestCommand.__test__ = False
 
 
 def test_skip_existing(destination_dir):
-    local_targets = ['file1.rtf', 'sub/subfile1.rtf']
+    local_targets = ["file1.rtf", "sub/subfile1.rtf"]
     targets = [str(destination_dir.join(t)) for t in local_targets]
     cmd = pkg.skip_if_exists(targets, TestCommand)
     run_command(cmd)
 
 
 def test_no_skip_missing(source_dir):
-    local_targets = ['file1.rtf', 'sub/subfile1.rtf']
+    local_targets = ["file1.rtf", "sub/subfile1.rtf"]
     targets = [str(source_dir.join(t)) for t in local_targets]
     cmd = pkg.skip_if_exists(targets, TestCommand)
     with pytest.raises(RuntimeError):

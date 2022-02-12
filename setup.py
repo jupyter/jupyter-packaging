@@ -4,4 +4,5 @@
 # Distributed under the terms of the Modified BSD License.
 
 from setuptools import setup
+
 setup()

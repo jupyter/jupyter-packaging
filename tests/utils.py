@@ -5,14 +5,17 @@ from setuptools.dist import Distribution
 
 
 def mock_dist():
-    return Distribution(dict(
-        script_name='setup.py',
-        packages=['foo'],
-        name='foo',
-    ))
+    return Distribution(
+        dict(
+            script_name="setup.py",
+            packages=["foo"],
+            name="foo",
+        )
+    )
+
 
 def run_command(cmd):
-    """Run a setuptools Command """
+    """Run a setuptools Command"""
     dist = mock_dist()
     instance = cmd(dist)
     instance.initialize_options()
@@ -22,7 +25,7 @@ def run_command(cmd):
 
 site_packages = Path(site.getsitepackages()[0])
 try:
-    target = site_packages / 'jupyter_packaging_test.txt'
+    target = site_packages / "jupyter_packaging_test.txt"
     site_packages.touch()
     site_packages.unlink()
     site_packages_readonly = False

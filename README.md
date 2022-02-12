@@ -116,7 +116,8 @@ setup(cmdclass=cmdclass)
 ```bash
 git clone https://github.com/jupyter/jupyter-packaging.git
 cd jupyter-packaging
-pip install -e .
+pip install -e .[test]
+pre-commit install
 ```
 
 You can test changes locally by creating a `pyproject.toml` with the following, replacing the local path to the git checkout:
