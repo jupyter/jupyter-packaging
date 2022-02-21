@@ -108,8 +108,27 @@ setup(cmdclass=cmdclass)
 - This package does not work with the deprecated `python setup.py bdist_wheel` or `python setup.py sdist` commands, PyPA recommends using the [build](https://pypa-build.readthedocs.io/en/latest/index.html) package (`pip install build && python -m build .`).
 - We recommend using `include_package_data=True` and `MANIFEST.in` to control the assets included in the [package](https://setuptools.readthedocs.io/en/latest/userguide/datafiles.html).
 - Tools like [`check-manifest`](https://github.com/mgedmin/check-manifest) or [`manifix`](https://github.com/vidartf/manifix) can be used to ensure the desired assets are included.
-- Simple uses of `data_files` can be handled in `setup.cfg` or in `setup.py`.  If recursive directories are needed use `get_data_files()` from this package.
+- Simple uses of `data_files` can be handled in `setup.cfg` or in `setup.py`.  For more advanced usage, see below paragraph.
 - Unfortunately `data_files` are not supported in `develop` mode (a limitation of `setuptools`).  You can work around it by doing a full install (`pip install .`) before the develop install (`pip install -e .`), or by adding a script to push the data files to `sys.base_prefix`.
+
+### Advanced Data Files Usage
+
+If the simple data_files support of `setup.cfg` is not sufficient for your needs, use `get_data_files()` from this package. The simplest use case is for including checked in files in a recursive (glob's `**` pattern) manner. In this case, set the `data_files` argument to the `setup()` function in `setup.py` to the output of the `get_data_files()` function.
+
+If you need to include files that are generated during the build, then add the following logic to the end of your `pre_dist` command:
+```python
+builder = npm_builder()
+def build_with_datafiles():
+    builder()
+    # needed as some dirs are generated as part of the build (or lazy):
+    <need reference to dist here!>.data_files = get_data_files([
+        ("etc/jupyter", "jupyter-config", "**/*.json"),
+    ])
+    
+cmdclass = wrap_installers(
+    pre_dist=build_with_datafiles,
+)
+```
 
 ## Development Install
 
