@@ -1,7 +1,8 @@
 import os
+from pathlib import Path
 import sys
 from subprocess import check_call
-from unittest.mock import patch, call
+from unittest.mock import patch
 
 import pytest
 
@@ -19,6 +20,11 @@ factory = "foo.main"
 
 [tool.jupyter-packaging.build-args]
 fizz = "buzz"
+"""
+
+DATA_CONTENT = """
+[tool.jupyter-packaging.external-data]
+directory = "data"
 """
 
 FOO_CONTENT = r"""
@@ -56,7 +62,7 @@ def test_build_wheel(tmp_path, mocker):
     os.chdir(tmp_path)
     tmp_path.joinpath("foo.py").write_text(FOO_CONTENT)
     tmp_path.joinpath("pyproject.toml").write_text(
-        TOML_CONTENT + ENSURED_CONTENT, encoding="utf-8"
+        TOML_CONTENT + DATA_CONTENT + ENSURED_CONTENT, encoding="utf-8"
     )
     orig_wheel = mocker.patch("jupyter_packaging.build_flit.orig_build_wheel")
     build_wheel(tmp_path)
@@ -149,6 +155,14 @@ def test_build_package(make_package):
     text = pyproject.read_text(encoding="utf-8")
     text = text.replace("setuptools.build_meta", "jupyter_packaging.build_flit")
     text += TOML_CONTENT
+    text += DATA_CONTENT
+    data_dir = package_dir / "data/etc/jupyter/jupyter_server_config.d"
+    data_dir.mkdir(parents=True)
+    data_file = data_dir / "jupyter_server_foo.json"
+    data_file.write_text(
+        '{"ServerApp": {"jpserver_extensions": {"jupyter_server_foo": true}}}"',
+        encoding="utf-8",
+    )
     pyproject.write_text(text, encoding="utf-8")
     package_dir.joinpath("foo.py").write_text(FOO_CONTENT, encoding="utf-8")
     check_call([sys.executable, "-m", "build"], cwd=package_dir)
@@ -161,8 +175,20 @@ def test_develop_package(make_package):
     pyproject = package_dir / "pyproject.toml"
     text = pyproject.read_text(encoding="utf-8")
     text = text.replace("setuptools.build_meta", "jupyter_packaging.build_flit")
-    text += TOML_CONTENT
-    text += ""
+    text += TOML_CONTENT.replace(".build", ".editable-build")
+    text += DATA_CONTENT
+    data_dir = package_dir / "data/etc/jupyter/jupyter_server_config.d"
+    data_dir.mkdir(parents=True)
+    data_file = data_dir / "jupyter_server_foo.json"
+    data_file.write_text(
+        '{"ServerApp": {"jpserver_extensions": {"jupyter_server_foo": true}}}"',
+        encoding="utf-8",
+    )
     pyproject.write_text(text, encoding="utf-8")
     package_dir.joinpath("foo.py").write_text(FOO_CONTENT, encoding="utf-8")
     check_call([sys.executable, "-m", "pip", "install", "-e", "."], cwd=package_dir)
+    target = (
+        Path(sys.base_prefix)
+        / "etc/jupyter/jupyter_server_config.d/jupyter_server_foo.json"
+    )
+    assert target.exists()

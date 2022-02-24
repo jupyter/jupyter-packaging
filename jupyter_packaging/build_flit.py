@@ -17,12 +17,16 @@ import tomli
 
 VERSION = "0.11.1"
 
+# PEP 517 specifies that the CWD will always be the source tree
+pyproj_toml = Path("pyproject.toml")
+
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
     """Build a wheel with an optional pre-build step."""
     builder = _get_build_func()
     if builder:
         builder()
+    _replace_keys()
     val = orig_build_wheel(
         wheel_directory,
         config_settings=config_settings,
@@ -37,6 +41,7 @@ def build_sdist(sdist_directory, config_settings=None):
     builder = _get_build_func()
     if builder:
         builder()
+    _replace_keys()
     val = orig_build_sdist(sdist_directory, config_settings=config_settings)
     _ensure_targets()
     return val
@@ -44,9 +49,10 @@ def build_sdist(sdist_directory, config_settings=None):
 
 def build_editable(wheel_directory, config_settings=None, metadata_directory=None):
     """Build in editable mode pre-build step."""
-    builder = _get_build_func()
+    builder = _get_build_func("editable-build") or _get_build_func("build")
     if builder:
         builder()
+    _replace_keys()
     val = orig_build_editable(
         wheel_directory,
         config_settings=config_settings,
@@ -56,23 +62,25 @@ def build_editable(wheel_directory, config_settings=None, metadata_directory=Non
     return val
 
 
-def _get_build_func():
+def _get_build_func(prefix="build"):
     pyproject = Path("pyproject.toml")
     if not pyproject.exists():
         return
+    target = prefix + "er"
+
     data = tomli.loads(pyproject.read_text(encoding="utf-8"))
     if "tool" not in data:
         return
     if "jupyter-packaging" not in data["tool"]:
         return
-    if "builder" not in data["tool"]["jupyter-packaging"]:
+    if target not in data["tool"]["jupyter-packaging"]:
         return
     section = data["tool"]["jupyter-packaging"]
 
-    if "factory" not in section["builder"]:
-        raise ValueError("Missing `factory` specifier for builder")
+    if "factory" not in section[target]:
+        raise ValueError(f"Missing `factory` specifier for {target}")
 
-    factory_data = section["builder"]["factory"]
+    factory_data = section[target]["factory"]
     mod_name, _, factory_name = factory_data.rpartition(".")
 
     if "options" in section and "skip-if-exists" in section["options"]:
@@ -91,7 +99,7 @@ def _get_build_func():
             sys.path.pop(0)
 
     factory = getattr(mod, factory_name)
-    kwargs = section.get("build-args", {})
+    kwargs = section.get(f"{prefix}-args", {})
     return factory(**kwargs)
 
 
@@ -110,3 +118,13 @@ def _ensure_targets():
         missing = [t for t in targets if not Path(t).exists()]
         if missing:
             raise ValueError(("missing files: %s" % missing))
+
+
+def _replace_keys():
+    if not pyproj_toml.exists():
+        return
+    data = pyproj_toml.read_text(encoding="utf-8")
+    before = "[tool][jupyter-packaging][external-data]"
+    after = "[tool][flit][external-data]"
+    data = data.replace(before, after)
+    pyproj_toml.write_text(data, encoding="utf-8")
