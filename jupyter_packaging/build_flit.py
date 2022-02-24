@@ -124,7 +124,7 @@ def _replace_keys():
     if not pyproj_toml.exists():
         return
     data = pyproj_toml.read_text(encoding="utf-8")
-    before = "[tool][jupyter-packaging][external-data]"
-    after = "[tool][flit][external-data]"
+    before = "[tool.jupyter-packaging.external-data]"
+    after = "[tool.flit.external-data]"
     data = data.replace(before, after)
     pyproj_toml.write_text(data, encoding="utf-8")
