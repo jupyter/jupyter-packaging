@@ -9,6 +9,11 @@ from jupyter_packaging.build_flit import build_wheel, build_sdist
 
 
 TOML_CONTENT = """
+[project]
+name = "foo"
+version = "0.1.0"
+description = "foo package"
+
 [tool.jupyter-packaging.builder]
 factory = "foo.main"
 
@@ -123,20 +128,6 @@ def test_build_package(make_package):
     text = pyproject.read_text(encoding="utf-8")
     text = text.replace("setuptools.build_meta", "jupyter_packaging.build_flit")
     text += TOML_CONTENT
-    pyproject.write_text(text, encoding="utf-8")
-    package_dir.joinpath("foo.py").write_text(FOO_CONTENT, encoding="utf-8")
-    check_call([sys.executable, "-m", "build"], cwd=package_dir)
-    data = package_dir.joinpath("foo.txt").read_text(encoding="utf-8")
-    assert data == "fizz=buzz"
-
-
-def test_deprecated_metadata(make_package):
-    package_dir = make_package()
-    pyproject = package_dir / "pyproject.toml"
-    text = pyproject.read_text(encoding="utf-8")
-    text = text.replace("setuptools.build_meta", "jupyter_packaging.build_flit")
-    text += TOML_CONTENT
-    text = text.replace("factory =", "func =")
     pyproject.write_text(text, encoding="utf-8")
     package_dir.joinpath("foo.py").write_text(FOO_CONTENT, encoding="utf-8")
     check_call([sys.executable, "-m", "build"], cwd=package_dir)
