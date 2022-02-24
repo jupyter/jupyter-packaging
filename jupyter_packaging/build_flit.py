@@ -4,8 +4,7 @@ import importlib
 from pathlib import Path
 import sys
 
-from deprecation import deprecated
-from setuptools.build_meta import (
+from flit.build_api import (
     get_requires_for_build_wheel,
     get_requires_for_build_sdist,
     prepare_metadata_for_build_wheel,
@@ -14,7 +13,8 @@ from setuptools.build_meta import (
 )
 import tomli
 
-from jupyter_packaging.setupbase import __version__
+
+VERSION = "0.11.1"
 
 
 def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
@@ -41,15 +41,6 @@ def build_sdist(sdist_directory, config_settings=None):
     return val
 
 
-@deprecated(
-    deprecated_in="0.8",
-    removed_in="1.0",
-    current_version=__version__,
-    details="Use `factory =` instead",
-)
-def _handle_deprecated_metadata():
-    pass
-
 
 def _get_build_func():
     pyproject = Path("pyproject.toml")
@@ -63,12 +54,6 @@ def _get_build_func():
     if "builder" not in data["tool"]["jupyter-packaging"]:
         return
     section = data["tool"]["jupyter-packaging"]
-
-    # Handle deprecated "func" builder kwarg
-    if "func" in section["builder"]:
-        _handle_deprecated_metadata()
-        if not "factory" in section["builder"]:
-            section["builder"]["factory"] = section["builder"]["func"]
 
     if "factory" not in section["builder"]:
         raise ValueError("Missing `factory` specifier for builder")
