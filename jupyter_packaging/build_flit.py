@@ -10,6 +10,7 @@ from flit.buildapi import (
     prepare_metadata_for_build_wheel,
     build_sdist as orig_build_sdist,
     build_wheel as orig_build_wheel,
+    build_editable as orig_build_editable,
 )
 import tomli
 
@@ -37,6 +38,20 @@ def build_sdist(sdist_directory, config_settings=None):
     if builder:
         builder()
     val = orig_build_sdist(sdist_directory, config_settings=config_settings)
+    _ensure_targets()
+    return val
+
+
+def build_editable(wheel_directory, config_settings=None, metadata_directory=None):
+    """Build in editable mode pre-build step."""
+    builder = _get_build_func()
+    if builder:
+        builder()
+    val = orig_build_editable(
+        wheel_directory,
+        config_settings=config_settings,
+        metadata_directory=metadata_directory,
+    )
     _ensure_targets()
     return val
 
