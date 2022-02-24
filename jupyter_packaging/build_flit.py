@@ -41,7 +41,6 @@ def build_sdist(sdist_directory, config_settings=None):
     return val
 
 
-
 def _get_build_func():
     pyproject = Path("pyproject.toml")
     if not pyproject.exists():
