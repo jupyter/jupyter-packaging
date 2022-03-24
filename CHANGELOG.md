@@ -2,11 +2,32 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.12.0
+
+([Full Changelog](https://github.com/jupyter/jupyter-packaging/compare/0.11.1...cdda1ad104dc5f2b27346f75c622a0ab851734c8))
+
+### Bugs fixed
+
+- Update import for new setuptools path (setuptools >=61.0.0) [#131](https://github.com/jupyter/jupyter-packaging/pull/131) ([@timkpaine](https://github.com/timkpaine))
+- Use pathlib rather than os.path [#125](https://github.com/jupyter/jupyter-packaging/pull/125) ([@fcollonval](https://github.com/fcollonval))
+
+### Maintenance and upkeep improvements
+
+- Add source URL to pypi project page [#129](https://github.com/jupyter/jupyter-packaging/pull/129) ([@manics](https://github.com/manics))
+- Add pre-commit [#126](https://github.com/jupyter/jupyter-packaging/pull/126) ([@fcollonval](https://github.com/fcollonval))
+- Stop using distutils.log [#123](https://github.com/jupyter/jupyter-packaging/pull/123) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter-packaging/graphs/contributors?from=2021-11-15&to=2022-03-24&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Ablink1073+updated%3A2021-11-15..2022-03-24&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Afcollonval+updated%3A2021-11-15..2022-03-24&type=Issues) | [@manics](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Amanics+updated%3A2021-11-15..2022-03-24&type=Issues) | [@timkpaine](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Atimkpaine+updated%3A2021-11-15..2022-03-24&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.11.1
 
 - Fix running testsuite within virtualenv [#111](https://github.com/jupyter/jupyter-packaging/pull/111) ([@jnahmias](https://github.com/jnahmias))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.11.0
 
@@ -72,7 +93,6 @@
 
 * Proposal: Improved integration with setuptools [#69](https://github.com/jupyter/jupyter-packaging/pull/69) ([@afshin](https://github.com/afshin))
 * Update changelog [#68](https://github.com/jupyter/jupyter-packaging/pull/68) ([@blink1073](https://github.com/blink1073))
-
 
 ## 0.7.12
 
