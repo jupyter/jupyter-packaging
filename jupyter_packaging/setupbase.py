@@ -34,8 +34,12 @@ if Path("MANIFEST").exists():
 from packaging.version import VERSION_PATTERN
 from setuptools import Command
 from setuptools.command.build_py import build_py
-from setuptools.config import StaticModule
 
+try:
+    from setuptools.config import StaticModule
+except ImportError:
+    # setuptools>=61.0.0
+    from setuptools.config.expand import StaticModule
 
 from setuptools.command.sdist import sdist
 from setuptools.command.develop import develop
