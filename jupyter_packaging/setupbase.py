@@ -72,7 +72,7 @@ VERSION_REGEX = re.compile(
 
 log = logging.getLogger(__name__)
 
-if "--skip-npm" in sys.argv:
+if "--skip-npm" in sys.argv or os.environ.get("JUPYTER_PACKAGING_SKIP_NPM") == "1":
     print("Skipping npm install as requested.")
     skip_npm = True
     sys.argv.remove("--skip-npm")
@@ -168,7 +168,8 @@ def npm_builder(
 ):
     """Build function factory for managing an npm installation.
 
-    Note: The function is a no-op if the `--skip-npm` cli flag is used.
+    Note: The function is a no-op if the `--skip-npm` cli flag is used
+        or JUPYTER_PACKAGING_SKIP_NPM env is set.
 
     Parameters
     ----------
@@ -427,7 +428,8 @@ def ensure_targets(targets):
 
     Raises a ValueError if any of the files are missing.
 
-    Note: The check is skipped if the `--skip-npm` flag is used.
+    Note: The check is skipped if the `--skip-npm` flag is used
+        or JUPYTER_PACKAGING_SKIP_NPM env is set.
     """
 
     class TargetsCheck(BaseCommand):
