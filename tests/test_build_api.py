@@ -1,12 +1,10 @@
 import os
 import sys
 from subprocess import check_call
-from unittest.mock import patch, call
 
 import pytest
 
-from jupyter_packaging.build_api import build_wheel, build_sdist
-
+from jupyter_packaging.build_api import build_sdist, build_wheel
 
 TOML_CONTENT = """
 [tool.jupyter-packaging.builder]
@@ -36,15 +34,6 @@ SKIP_IF_EXISTS = """
 [tool.jupyter-packaging.options]
 skip-if-exists = ["foo.txt"]
 """
-
-
-def test_build_wheel_no_toml(tmp_path):
-    os.chdir(tmp_path)
-    orig_wheel = patch("jupyter_packaging.build_api.orig_build_wheel")
-    build_wheel(tmp_path)
-    orig_wheel.assert_called_with(
-        tmp_path, config_settings=None, metadata_directory=None
-    )
 
 
 def test_build_wheel(tmp_path, mocker):

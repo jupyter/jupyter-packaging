@@ -1,18 +1,16 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import importlib
-from pathlib import Path
 import sys
+from pathlib import Path
 
-from deprecation import deprecated
-from setuptools.build_meta import (
-    get_requires_for_build_wheel,
-    get_requires_for_build_sdist,
-    prepare_metadata_for_build_wheel,
-    build_sdist as orig_build_sdist,
-    build_wheel as orig_build_wheel,
-)
 import tomlkit
+from deprecation import deprecated
+from setuptools.build_meta import build_sdist as orig_build_sdist
+from setuptools.build_meta import build_wheel as orig_build_wheel
+from setuptools.build_meta import get_requires_for_build_sdist  # noqa
+from setuptools.build_meta import get_requires_for_build_wheel  # noqa
+from setuptools.build_meta import prepare_metadata_for_build_wheel  # noqa
 
 from jupyter_packaging.setupbase import __version__
 
@@ -67,7 +65,7 @@ def _get_build_func():
     # Handle deprecated "func" builder kwarg
     if "func" in section["builder"]:
         _handle_deprecated_metadata()
-        if not "factory" in section["builder"]:
+        if "factory" not in section["builder"]:
             section["builder"]["factory"] = section["builder"]["func"]
 
     if "factory" not in section["builder"]:

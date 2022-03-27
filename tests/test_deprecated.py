@@ -1,11 +1,9 @@
 import os
 import sys
 from pathlib import Path
-from unittest.mock import patch
 
-from deprecation import fail_if_not_removed
 import pytest
-
+from deprecation import fail_if_not_removed
 from setuptools.dist import Distribution
 
 import jupyter_packaging.setupbase as pkg
@@ -146,7 +144,7 @@ def test__wrap_command():
     cmd.run_command = func
     dist = Distribution()
     cmd(dist).run()
-    assert called == True
+    assert called is True
 
 
 @fail_if_not_removed

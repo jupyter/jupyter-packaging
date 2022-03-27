@@ -1,13 +1,12 @@
-import pytest
-import subprocess
-import shutil
 import pathlib
+import shutil
+import subprocess
 import sys
 
+import pytest
 from deprecation import fail_if_not_removed
 
 from .utils import site_packages_readonly
-
 
 data_files_combinations = [
     (

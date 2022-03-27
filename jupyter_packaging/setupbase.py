@@ -8,17 +8,17 @@ This file originates from the 'jupyter-packaging' package, and
 contains a set of useful utilities for including npm packages
 within a Python package.
 """
-from collections import defaultdict
-from pathlib import Path
+import functools
 import io
 import logging
 import os
-import functools
 import pipes
 import re
 import shlex
 import subprocess
 import sys
+from collections import defaultdict
+from pathlib import Path
 from shutil import which
 from typing import Callable, List, Optional, Tuple, Union
 
@@ -26,7 +26,7 @@ try:
     from deprecation import deprecated
 except ImportError:
     # shim deprecated to allow setuptools to find the version string in this file
-    deprecated = lambda *args, **kwargs: lambda *args, **kwargs: None
+    deprecated = lambda *args, **kwargs: lambda *args, **kwargs: None  # noqa
 
 if Path("MANIFEST").exists():
     Path("MANIFEST").unlink()
@@ -41,9 +41,9 @@ except ImportError:
     # setuptools>=61.0.0
     from setuptools.config.expand import StaticModule
 
-from setuptools.command.sdist import sdist
-from setuptools.command.develop import develop
 from setuptools.command.bdist_egg import bdist_egg
+from setuptools.command.develop import develop
+from setuptools.command.sdist import sdist
 
 try:
     from wheel.bdist_wheel import bdist_wheel
@@ -199,7 +199,7 @@ def npm_builder(
 
         is_yarn = (node_package / "yarn.lock").exists()
         if is_yarn and not which("yarn"):
-            log.warn("yarn not found, ignoring yarn.lock file")
+            log.warning("yarn not found, ignoring yarn.lock file")
             is_yarn = False
 
         npm_cmd = npm
@@ -226,7 +226,7 @@ def npm_builder(
 
         if should_build:
             log.info(
-                "Installing build dependencies with npm.  This may " "take a while..."
+                "Installing build dependencies with npm.  This may take a while..."
             )
             run(npm_cmd + ["install"], cwd=node_package)
             if build_cmd:
@@ -268,7 +268,7 @@ def get_version(fpath: Union[str, Path], name: str = "__version__") -> str:
     try:
         module = StaticModule(fpath.as_posix().replace("/", ".").replace(".py", ""))
         return getattr(module, name)
-    except Exception as e:
+    except Exception:
         pass
 
     path = fpath.resolve()
@@ -280,7 +280,7 @@ def get_version(fpath: Union[str, Path], name: str = "__version__") -> str:
 
 def run(cmd, **kwargs):
     """Echo a command before running it."""
-    log.info("> " + list2cmdline(cmd))
+    log.info(f"> {list2cmdline(cmd)}")
     kwargs.setdefault("shell", os.name == "nt")
     if not isinstance(cmd, (list, tuple)):
         cmd = shlex.split(cmd, posix=os.name != "nt")
@@ -750,7 +750,7 @@ def _get_file_handler(package_data_spec, data_files_spec, exclude=None):
     class FileHandler(BaseCommand):
         def run(self):
             package_data = self.distribution.package_data
-            package_spec = package_data_spec or dict()
+            package_spec = package_data_spec or {}
 
             for (key, patterns) in package_spec.items():
                 files = _get_package_data(key, patterns)
