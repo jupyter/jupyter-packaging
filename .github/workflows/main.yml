@@ -34,10 +34,15 @@ jobs:
         pip install -e ".[test]"
     - name: Lint code
       run: python -m pre_commit run --all
-    - name: Run test
+    - name: Run the tests
+      if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
       run: |
         args="-vv --cov jupyter_packaging --cov-branch --cov-report term-missing:skip-covered --cov-fail-under 70"
         python -m pytest $args || python -m pytest $args --lf
+    - name: Run the tests on pypy and windows
+      if: ${{ startsWith(matrix.python-version, 'pypy') || startsWith(matrix.os, 'windows') }}
+      run: |
+        python -m pytest -vv || python -m pytest -vv --lf
     - name: Coverage
       run: |
         codecov
