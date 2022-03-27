@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install -U codecov
-        pip install -e ".[test]""
+        pip install -e ".[test]"
     - name: Lint code
       run: python -m pre_commit run --all
     - name: Run test
