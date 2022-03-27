@@ -199,7 +199,7 @@ def npm_builder(
 
         is_yarn = (node_package / "yarn.lock").exists()
         if is_yarn and not which("yarn"):
-            log.warn("yarn not found, ignoring yarn.lock file")
+            log.warning("yarn not found, ignoring yarn.lock file")
             is_yarn = False
 
         npm_cmd = npm
