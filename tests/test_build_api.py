@@ -1,7 +1,6 @@
 import os
 import sys
 from subprocess import check_call
-from unittest.mock import patch
 
 import pytest
 
@@ -37,15 +36,6 @@ skip-if-exists = ["foo.txt"]
 """
 
 
-def test_build_wheel_no_toml(tmp_path):
-    os.chdir(tmp_path)
-    orig_wheel = patch("jupyter_packaging.build_api.orig_build_wheel")
-    build_wheel(tmp_path)
-    orig_wheel.assert_called_with(
-        tmp_path, config_settings=None, metadata_directory=None
-    )
-
-
 def test_build_wheel(tmp_path, mocker):
     os.chdir(tmp_path)
     tmp_path.joinpath("foo.py").write_text(FOO_CONTENT)
@@ -75,6 +65,15 @@ def test_build_wheel_bad_toml(tmp_path, mocker):
     with pytest.raises(ValueError):
         build_wheel(tmp_path)
     orig_wheel.assert_not_called()
+
+
+def test_build_wheel_no_toml(tmp_path, mocker):
+    os.chdir(tmp_path)
+    orig_wheel = mocker.patch("jupyter_packaging.build_api.orig_build_wheel")
+    build_wheel(tmp_path)
+    orig_wheel.assert_called_with(
+        tmp_path, config_settings=None, metadata_directory=None
+    )
 
 
 def test_build_sdist(tmp_path, mocker):
