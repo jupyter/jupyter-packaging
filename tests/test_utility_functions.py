@@ -1,10 +1,10 @@
-from unittest.mock import patch
-import pytest
 import sys
 
+import pytest
 from setuptools.dist import Distribution
-from jupyter_packaging.setupbase import __file__ as path
+
 import jupyter_packaging.setupbase as pkg
+from jupyter_packaging.setupbase import __file__ as path
 
 from .utils import run_command
 

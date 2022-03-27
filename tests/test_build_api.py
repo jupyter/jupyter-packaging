@@ -1,12 +1,11 @@
 import os
 import sys
 from subprocess import check_call
-from unittest.mock import patch, call
+from unittest.mock import patch
 
 import pytest
 
-from jupyter_packaging.build_api import build_wheel, build_sdist
-
+from jupyter_packaging.build_api import build_sdist, build_wheel
 
 TOML_CONTENT = """
 [tool.jupyter-packaging.builder]
@@ -76,15 +75,6 @@ def test_build_wheel_bad_toml(tmp_path, mocker):
     with pytest.raises(ValueError):
         build_wheel(tmp_path)
     orig_wheel.assert_not_called()
-
-
-def test_build_wheel_no_toml(tmp_path, mocker):
-    os.chdir(tmp_path)
-    orig_wheel = mocker.patch("jupyter_packaging.build_api.orig_build_wheel")
-    build_wheel(tmp_path)
-    orig_wheel.assert_called_with(
-        tmp_path, config_settings=None, metadata_directory=None
-    )
 
 
 def test_build_sdist(tmp_path, mocker):

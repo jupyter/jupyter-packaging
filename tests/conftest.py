@@ -1,8 +1,9 @@
 import json
 import pathlib
 import sys
-from pytest import fixture
 from subprocess import run
+
+from pytest import fixture
 
 HERE = pathlib.Path(__file__).resolve()
 NAME = "jupyter_packaging_test_foo"
@@ -68,7 +69,6 @@ cmdclass = wrap_installers(pre_dist={pre_dist}, ensured_targets={ensured_targets
 
 setuptools.setup(data_files=data_files, cmdclass=cmdclass, {setup_args})
 """.format(
-    name=name,
     data_files_spec=data_files_spec,
     pre_dist=pre_dist or "lambda: print",
     ensured_targets=ensured_targets or [],
@@ -92,7 +92,6 @@ cmdclass['jsdeps'] = install_npm()
 
 setuptools.setup(cmdclass=cmdclass, {setup_args})
 """.format(
-    name=name,
     data_files_spec=data_files_spec,
     setup_args="".join(
         ["{}={},\n\t".format(key, str(val)) for key, val in kwargs.items()]

@@ -1,11 +1,11 @@
 import subprocess
-from pathlib import Path
 import sys
 import sysconfig
-
-from .utils import site_packages_readonly
+from pathlib import Path
 
 import pytest
+
+from .utils import site_packages_readonly
 
 
 @pytest.mark.skipif(site_packages_readonly, reason="Site Packages are Read-only")
