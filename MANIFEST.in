@@ -1,6 +1,0 @@
-include LICENSE
-include CHANGELOG.md
-include RELEASE.md
-include .pre-commit-config.yaml
-
-graft tests

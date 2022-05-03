@@ -1,6 +1,56 @@
 [build-system]
-requires = ["setuptools>=46.4.0", "wheel", "packaging"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "jupyter_packaging"
+description = "Jupyter Packaging Utilities."
+license = { file = "LICENSE" }
+authors = [{name = "Jupyter Development Team", email = "jupyter@googlegroups.com"}]
+keywords = ["ipython", "jupyter", "packaging"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "packaging",
+    "tomlkit",
+    "setuptools>=60.2.0",
+    "wheel",
+    "deprecation",
+]
+dynamic = ["version"]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.urls]
+Homepage = "http://jupyter.org"
+Source = "https://github.com/jupyter/jupyter-packaging/"
+"Bug Tracker" = "https://github.com/jupyter/jupyter-packaging/issues"
+
+[project.optional-dependencies]
+test = [
+    "build",
+    "coverage",
+    "pre-commit",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-timeout",
+]
+
+[tool.flit.sdist]
+include = ["tests/"]
 
 [tool.jupyter-releaser]
 skip = ["check-links"]
