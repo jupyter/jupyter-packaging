@@ -2,6 +2,39 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.12.1
+
+([Full Changelog](https://github.com/jupyter/jupyter-packaging/compare/v0.12.0...6b3a5ee597be17b4ef5cc4fa7545d7b5bfa80357))
+
+### Enhancements made
+
+- Allow skipping npm with JUPYTER_PACKAGING_SKIP_NPM env [#133](https://github.com/jupyter/jupyter-packaging/pull/133) ([@minrk](https://github.com/minrk))
+
+### Maintenance and upkeep improvements
+
+- [pre-commit.ci] pre-commit autoupdate [#149](https://github.com/jupyter/jupyter-packaging/pull/149) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Auto label bot PRs [#148](https://github.com/jupyter/jupyter-packaging/pull/148) ([@blink1073](https://github.com/blink1073))
+- Use hatch backend [#147](https://github.com/jupyter/jupyter-packaging/pull/147) ([@blink1073](https://github.com/blink1073))
+- [pre-commit.ci] pre-commit autoupdate [#146](https://github.com/jupyter/jupyter-packaging/pull/146) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Use flit build backend [#144](https://github.com/jupyter/jupyter-packaging/pull/144) ([@blink1073](https://github.com/blink1073))
+- [pre-commit.ci] pre-commit autoupdate [#142](https://github.com/jupyter/jupyter-packaging/pull/142) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#141](https://github.com/jupyter/jupyter-packaging/pull/141) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#140](https://github.com/jupyter/jupyter-packaging/pull/140) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Update pre-commit [#139](https://github.com/jupyter/jupyter-packaging/pull/139) ([@blink1073](https://github.com/blink1073))
+- Clean up CI and Tests [#137](https://github.com/jupyter/jupyter-packaging/pull/137) ([@blink1073](https://github.com/blink1073))
+
+### Other merged PRs
+
+- do not install tests as a top-level package [#135](https://github.com/jupyter/jupyter-packaging/pull/135) ([@mgorny](https://github.com/mgorny))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter-packaging/graphs/contributors?from=2022-03-24&to=2022-05-31&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Ablink1073+updated%3A2022-03-24..2022-05-31&type=Issues) | [@mgorny](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Amgorny+updated%3A2022-03-24..2022-05-31&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Aminrk+updated%3A2022-03-24..2022-05-31&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Apre-commit-ci+updated%3A2022-03-24..2022-05-31&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.12.0
 
 ([Full Changelog](https://github.com/jupyter/jupyter-packaging/compare/0.11.1...cdda1ad104dc5f2b27346f75c622a0ab851734c8))
@@ -22,8 +55,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter-packaging/graphs/contributors?from=2021-11-15&to=2022-03-24&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Ablink1073+updated%3A2021-11-15..2022-03-24&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Afcollonval+updated%3A2021-11-15..2022-03-24&type=Issues) | [@manics](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Amanics+updated%3A2021-11-15..2022-03-24&type=Issues) | [@timkpaine](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Atimkpaine+updated%3A2021-11-15..2022-03-24&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.11.1
 
