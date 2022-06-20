@@ -2,6 +2,24 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.12.2
+
+([Full Changelog](https://github.com/jupyter/jupyter-packaging/compare/v0.12.1...31b98c53f27292db4b9046a385246a59e3ec587b))
+
+### Maintenance and upkeep improvements
+
+- Replace deprecated pipes.quote with shlex.quote [#153](https://github.com/jupyter/jupyter-packaging/pull/153) ([@hroncok](https://github.com/hroncok))
+- [pre-commit.ci] pre-commit autoupdate [#152](https://github.com/jupyter/jupyter-packaging/pull/152) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#151](https://github.com/jupyter/jupyter-packaging/pull/151) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter-packaging/graphs/contributors?from=2022-05-31&to=2022-06-20&type=c))
+
+[@hroncok](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Ahroncok+updated%3A2022-05-31..2022-06-20&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Apre-commit-ci+updated%3A2022-05-31..2022-06-20&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.12.1
 
 ([Full Changelog](https://github.com/jupyter/jupyter-packaging/compare/v0.12.0...6b3a5ee597be17b4ef5cc4fa7545d7b5bfa80357))
@@ -32,8 +50,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter-packaging/graphs/contributors?from=2022-03-24&to=2022-05-31&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Ablink1073+updated%3A2022-03-24..2022-05-31&type=Issues) | [@mgorny](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Amgorny+updated%3A2022-03-24..2022-05-31&type=Issues) | [@minrk](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Aminrk+updated%3A2022-03-24..2022-05-31&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Apre-commit-ci+updated%3A2022-03-24..2022-05-31&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.12.0
 
