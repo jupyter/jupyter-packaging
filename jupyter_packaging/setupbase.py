@@ -57,7 +57,7 @@ else:
         return " ".join(map(shlex.quote, cmd_list))
 
 
-__version__ = "0.12.2"
+__version__ = "0.12.3"
 
 # ---------------------------------------------------------------------------
 # Top Level Variables
