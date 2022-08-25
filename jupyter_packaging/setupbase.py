@@ -74,7 +74,8 @@ log = logging.getLogger(__name__)
 if "--skip-npm" in sys.argv or os.environ.get("JUPYTER_PACKAGING_SKIP_NPM") == "1":
     print("Skipping npm install as requested.")
     skip_npm = True
-    sys.argv.remove("--skip-npm")
+    if "--skip-npm" in sys.argv:
+        sys.argv.remove("--skip-npm")
 else:
     skip_npm = False
 
