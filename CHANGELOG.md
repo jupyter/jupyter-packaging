@@ -2,6 +2,30 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.12.3
+
+([Full Changelog](https://github.com/jupyter/jupyter-packaging/compare/v0.12.2...3b59f1c9a1f9ab0adb5a387ec10e9a2098c73d99))
+
+### Bugs fixed
+
+- only remove --skip-npm from argv if it is here [#161](https://github.com/jupyter/jupyter-packaging/pull/161) ([@videlec](https://github.com/videlec))
+
+### Maintenance and upkeep improvements
+
+- [pre-commit.ci] pre-commit autoupdate [#159](https://github.com/jupyter/jupyter-packaging/pull/159) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#158](https://github.com/jupyter/jupyter-packaging/pull/158) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#157](https://github.com/jupyter/jupyter-packaging/pull/157) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#156](https://github.com/jupyter/jupyter-packaging/pull/156) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#155](https://github.com/jupyter/jupyter-packaging/pull/155) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyter/jupyter-packaging/graphs/contributors?from=2022-06-20&to=2022-08-25&type=c))
+
+[@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Apre-commit-ci+updated%3A2022-06-20..2022-08-25&type=Issues) | [@videlec](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Avidelec+updated%3A2022-06-20..2022-08-25&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.12.2
 
 ([Full Changelog](https://github.com/jupyter/jupyter-packaging/compare/v0.12.1...31b98c53f27292db4b9046a385246a59e3ec587b))
@@ -17,8 +41,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyter/jupyter-packaging/graphs/contributors?from=2022-05-31&to=2022-06-20&type=c))
 
 [@hroncok](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Ahroncok+updated%3A2022-05-31..2022-06-20&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Ajupyter%2Fjupyter-packaging+involves%3Apre-commit-ci+updated%3A2022-05-31..2022-06-20&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.12.1
 
