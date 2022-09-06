@@ -1,5 +1,10 @@
 # Jupyter Packaging
 
+:warning: We recommend using [Hatch Jupyter Builder](https://github.com/jupyterlab/hatch-jupyter-builder) instead of Jupyter Packaging for new and existing projects.
+See the blog post [Packaging for Jupyter in 2022](https://blog.jupyter.org/packaging-for-jupyter-in-2022-c7be64c38926).
+
+## About 
+
 Tools to help build and install Jupyter Python packages that require a pre-build step that may include JavaScript build steps.
 
 ## Install
