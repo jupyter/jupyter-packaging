@@ -41,7 +41,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/sirosen/check-jsonschema
-    rev: 0.19.1
+    rev: 0.19.2
     hooks:
       - id: check-jsonschema
         name: "Check GitHub Workflows"
