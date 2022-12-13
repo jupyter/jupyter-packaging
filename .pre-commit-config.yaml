@@ -1,12 +1,12 @@
 repos:
   - repo: https://github.com/psf/black
-    rev: 22.10.0 # Replace by any tag/version: https://github.com/psf/black/tags
+    rev: 22.12.0 # Replace by any tag/version: https://github.com/psf/black/tags
     hooks:
       - id: black
         language_version: python3  # Should be a command that runs python3.6+
 
   - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
+    rev: 5.11.1
     hooks:
     - id: isort
       files: \.py$
