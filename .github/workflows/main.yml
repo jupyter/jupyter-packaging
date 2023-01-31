@@ -32,8 +32,6 @@ jobs:
       run: |
         python -m pip install -U codecov
         pip install -e ".[test]"
-    - name: Lint code
-      run: python -m pre_commit run --all
     - name: Run the tests
       if: ${{ !startsWith(matrix.python-version, 'pypy') && !startsWith(matrix.os, 'windows') }}
       run: |
@@ -46,6 +44,13 @@ jobs:
     - name: Coverage
       run: |
         codecov
+
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/pre-commit@v1
 
   test_miniumum_versions:
     name: Test Minimum Versions
