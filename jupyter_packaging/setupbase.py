@@ -752,7 +752,7 @@ def _get_file_handler(package_data_spec, data_files_spec, exclude=None):
             package_data = self.distribution.package_data
             package_spec = package_data_spec or {}
 
-            for (key, patterns) in package_spec.items():
+            for key, patterns in package_spec.items():
                 files = _get_package_data(key, patterns)
                 if exclude is not None:
                     files = [f for f in files if not exclude(f)]
@@ -828,12 +828,12 @@ def _get_data_files(
 
     # Extract the existing data files into a staging object.
     file_data = defaultdict(list)
-    for (path, files) in existing or []:
+    for path, files in existing or []:
         file_data[path] = files
 
     # Extract the files and assign them to the proper data
     # files path.
-    for (path, dname, pattern) in data_specs or []:
+    for path, dname, pattern in data_specs or []:
         dname = Path(dname)
         if dname.is_absolute():
             dname = dname.relative_to(top)
@@ -854,7 +854,7 @@ def _get_data_files(
 
     # Construct the data files spec.
     data_files = []
-    for (path, files) in file_data.items():
+    for path, files in file_data.items():
         data_files.append((path, files))
     return data_files
 
