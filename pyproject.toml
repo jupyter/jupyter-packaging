@@ -81,5 +81,7 @@ filterwarnings= [
   # Fail on warnings
   "error",
   # Ignore our own deprecation warnings.
-  "ignore:.*:deprecation.DeprecatedWarning"
+  "ignore:.*:deprecation.DeprecatedWarning",
+  # Ignore warning raised when importing setuptools.command.develop.
+  "ignore:pkg_resources is deprecated as an API:DeprecationWarning"
 ]
