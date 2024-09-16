@@ -80,5 +80,8 @@ filterwarnings= [
   # Ignore our own deprecation warnings.
   "ignore:.*:deprecation.DeprecatedWarning",
   # Ignore warning raised when importing setuptools.command.develop.
-  "ignore:pkg_resources is deprecated as an API:DeprecationWarning"
+  "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
+  # bdist_wheel moved from wheel 0.44+ to setuptools 0.70.1+.
+  # We already handle it but wheel 0.44 could still emit the warning with an older setuptools.
+  "ignore:The 'wheel' package is no longer the canonical location of the 'bdist_wheel' command:DeprecationWarning",
 ]

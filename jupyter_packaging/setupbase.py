@@ -45,9 +45,12 @@ from setuptools.command.develop import develop
 from setuptools.command.sdist import sdist
 
 try:
-    from wheel.bdist_wheel import bdist_wheel
+    from setuptools.command.bdist_wheel import bdist_wheel
 except ImportError:  # pragma: no cover
-    bdist_wheel = None
+    try:
+        from wheel.bdist_wheel import bdist_wheel
+    except ImportError:
+        bdist_wheel = None
 
 if sys.platform == "win32":  # pragma: no cover
     from subprocess import list2cmdline
