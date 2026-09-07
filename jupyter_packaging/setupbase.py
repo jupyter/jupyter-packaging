@@ -8,6 +8,7 @@ This file originates from the 'jupyter-packaging' package, and
 contains a set of useful utilities for including npm packages
 within a Python package.
 """
+
 import functools
 import io
 import logging
@@ -954,7 +955,7 @@ def _iexplode_path(path):
 
     Splits path recursively with os.path.split().
     """
-    (head, tail) = os.path.split(str(path))
+    head, tail = os.path.split(str(path))
     if not head or (not tail and head == path):
         if head:
             yield head
