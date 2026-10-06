@@ -51,9 +51,7 @@ zip_safe = False
 include_package_data = True
 py_modules = foo
 python_requires = >=3.6
-""".format(
-    name=name
-)
+""".format(name=name)
 
 setup_maker = lambda name=NAME, data_files_spec=None, pre_dist=None, ensured_targets=None, skip_if_exists=None, **kwargs: """
 from jupyter_packaging import get_data_files, wrap_installers, npm_builder
